@@ -554,14 +554,20 @@ const USUARIOS = [
 
 /* ------------------------------- Estado ---------------------------------- */
 const estado = {
-  vista: "login",            // 'login' | 'app'
+  vista: "login",            // 'login' | 'app' | 'ficha'
   usuario: null,             // usuario logueado: { nombre, pin, rol }
   vehiculos: [],             // datos obtenidos del JSON de R2
   cargando: false,
   datosCargados: false,
   errorCarga: null,
   vistaListado: "listado",   // vista activa: 'listado' | 'cuadricula'
-  filtroEstado: "todos"      // píldora activa: 'todos' | 'apto' | 'obs' | 'mantenimiento' | 'no-apto'
+  filtroEstado: "todos",     // píldora activa: 'todos' | 'apto' | 'obs' | 'mantenimiento' | 'no-apto'
+  kilometrajes: {            // API externo de kilometrajes-actuales
+    porId: {},               // id normalizado (entero) -> kilometraje (número)
+    cargando: false,
+    cargado: false,
+    error: null
+  }
 };
 
 /* ------------------------------ Utilidades ------------------------------- */
@@ -1165,6 +1171,65 @@ function render() {
   visibles.forEach((v) => contenedor.append(esCuadricula ? crearTarjetaCuadricula(v) : crearTarjeta(v)));
 }
 
+/* ---------------- Kilometrajes (API externo, base_ficha) ------------------ */
+/* GET http://logistica.arrayanhn.com:3004/api/public/kilometrajes-actuales
+   Respuesta: { success, message, data: { unidades: [ { nombre, clase,
+   categoria, kilometraje, fecha } ] } }. "clase" puede traer ceros a la
+   izquierda ("065") y se normaliza con parseInt para cruzarla con el "id". */
+const URL_KILOMETRAJES = "http://logistica.arrayanhn.com:3004/api/public/kilometrajes-actuales";
+const FORMATO_KM = new Intl.NumberFormat("es-HN");
+
+function normalizarId(valor) {
+  const numero = parseInt(valor, 10);
+  return Number.isFinite(numero) ? numero : null;
+}
+
+/* Consulta el API con manejo de errores suave: si falla, el odómetro
+   simplemente permanece en "N/A" y la aplicación no se rompe. */
+async function cargarKilometrajes(forzar = false) {
+  if (estado.kilometrajes.cargando || (estado.kilometrajes.cargado && !forzar)) return;
+  estado.kilometrajes.cargando = true;
+  try {
+    const respuesta = await fetch(URL_KILOMETRAJES, { cache: "no-store" });
+    if (!respuesta.ok) throw new Error("HTTP " + respuesta.status + " " + respuesta.statusText);
+    const datos = await respuesta.json();
+    const unidades = datos && datos.data && Array.isArray(datos.data.unidades)
+      ? datos.data.unidades
+      : (Array.isArray(datos) ? datos : []);
+    const porId = {};
+    unidades.forEach((unidad) => {
+      if (!unidad) return;
+      const id = normalizarId(unidad.clase);
+      const km = unidad.kilometraje;
+      if (id !== null && km !== null && km !== undefined &&
+          String(km).trim() !== "" && Number.isFinite(Number(km))) {
+        porId[id] = Number(km);
+      }
+    });
+    estado.kilometrajes.porId = porId;
+    estado.kilometrajes.cargado = true;
+    estado.kilometrajes.error = null;
+  } catch (error) {
+    estado.kilometrajes.porId = {};   // sin datos fiables -> el odómetro pasa a N/A
+    estado.kilometrajes.error = String(error && error.message ? error.message : error);
+  }
+  estado.kilometrajes.cargando = false;
+
+  /* Si la ficha está abierta, refresca el odómetro con lo recién cargado */
+  if (estado.vista === "ficha" && estado.vehiculoFicha !== null && estado.vehiculoFicha !== undefined) {
+    const vehiculo = estado.vehiculos.find((v) => String(v.id) === String(estado.vehiculoFicha));
+    if (vehiculo) $("detail-odometer").textContent = textoOdometro(vehiculo.id);
+  }
+}
+
+/* Odómetro legible: "125,430 KM" o "N/A" sin coincidencia/dato nulo */
+function textoOdometro(idVehiculo) {
+  const id = normalizarId(idVehiculo);
+  const km = id === null ? null : estado.kilometrajes.porId[id];
+  if (km === null || km === undefined || !Number.isFinite(Number(km))) return "N/A";
+  return FORMATO_KM.format(Number(km)) + " KM";
+}
+
 /* ------------------- Vista Ficha Técnica (base_ficha) --------------------- */
 const FOTO_PLACEHOLDER = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400">' +
@@ -1188,8 +1253,7 @@ const MAPA_FICHA = [
   ["detail-vehicle-vin", "vin"],
   ["detail-vehicle-owner", "propietario"],
   ["detail-vehicle-engine-model", "modeloMotor"],
-  ["detail-vehicle-fuel", "combustible"],
-  ["detail-odometer", "odometro"]   // el JSON aún no publica kilometraje -> N/A
+  ["detail-vehicle-fuel", "combustible"]
 ];
 
 /* Campos adicionales de la plantilla sin id requerido (id generado: ficha-campo-X) */
@@ -1217,7 +1281,6 @@ const SELECTOR_ESTADO_FICHA = [
 
 /* Texto a mostrar: N/A explícito para null/undefined/vacío */
 function textoCampoFicha(vehiculo, campo) {
-  if (campo === "odometro") return "N/A";
   const valor = vehiculo[campo];
   if (valor === null || valor === undefined || String(valor).trim() === "") return "N/A";
   if (typeof valor === "boolean") return valor ? "Sí" : "No";
@@ -1262,6 +1325,8 @@ function renderizarFicha(vehiculo) {
   CAMPOS_EXTRA_FICHA.forEach((campo) => {
     $("ficha-campo-" + campo).textContent = textoCampoFicha(vehiculo, campo);
   });
+  /* Odómetro desde el API externo de kilometrajes (N/A si no hay dato) */
+  $("detail-odometer").textContent = textoOdometro(vehiculo.id);
   sincronizarSelectorEstado(claveSelectorFicha(vehiculo["estado-vehicular"]));
   establecerAcordeonesFicha(1);
 }
@@ -1271,6 +1336,7 @@ function abrirFicha(idVehiculo) {
   if (!vehiculo) return;
   estado.vehiculoFicha = idVehiculo;
   renderizarFicha(vehiculo);
+  cargarKilometrajes();   // asegura el odómetro del API (o N/A si falla)
   /* Sólo se conmutan los contenedores del área de contenido principal.
      El header global (main-header) permanece fijo, visible y intacto. */
   $("view-app").classList.add("hidden");
@@ -1316,7 +1382,8 @@ SELECTOR_ESTADO_FICHA.forEach(([id, claveBoton]) => {
 $("detail-vehicle-photo").addEventListener("error", () => {
   $("detail-vehicle-photo").src = FOTO_PLACEHOLDER;
 });
-cargarVehiculos();   // precarga de datos mientras se muestra el login
+cargarVehiculos();        // precarga de datos mientras se muestra el login
+cargarKilometrajes();     // precarga del API de kilometrajes (N/A si falla)
 </script>
 </body>
 </html>
