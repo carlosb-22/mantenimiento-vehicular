@@ -37,6 +37,7 @@
     {
       "id": 65,
       "nombre": "Land Cruiser Prado",
+      "foto": "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/vehiculos/65.jpg",
       "asignado": "Daniel Pineda",
       "placa": "HDT9436",
       "revision": "31/10/2026",
@@ -69,6 +70,7 @@
     {
       "id": 83,
       "nombre": "Amarok Gris",
+      "foto": "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/vehiculos/83.jpg",
       "asignado": null,
       "placa": "HDD7516",
       "revision": "31/07/2026",
@@ -101,6 +103,7 @@
     {
       "id": 84,
       "nombre": "Amarok Blanco",
+      "foto": "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/vehiculos/84.jpg",
       "asignado": "Control Room",
       "placa": "JAC6145",
       "revision": "30/09/2026",
@@ -133,6 +136,7 @@
     {
       "id": 306,
       "nombre": "Nissan Frontier NP300",
+      "foto": "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/vehiculos/306.jpg",
       "asignado": null,
       "placa": "HAA0729",
       "revision": "01/12/2026",
@@ -165,6 +169,7 @@
     {
       "id": 307,
       "nombre": "Mitsubishi L200",
+      "foto": "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/vehiculos/307.jpg",
       "asignado": null,
       "placa": "HAE4025",
       "revision": "30/09/2026",
@@ -261,6 +266,7 @@
     {
       "id": 308,
       "nombre": "Camión KIA Doble Cabina",
+      "foto": "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/vehiculos/308_1.jpg",
       "asignado": null,
       "placa": "HBD3084",
       "revision": "02/10/2026",
@@ -293,6 +299,7 @@
     {
       "id": 69,
       "nombre": "Camión KIA Cabina Sencilla",
+      "foto": "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/vehiculos/8_1.jpg",
       "asignado": "Construcción",
       "placa": "PDÑ2289",
       "revision": "2026",
@@ -325,6 +332,7 @@
     {
       "id": 97,
       "nombre": "Hilux Ocre",
+      "foto": "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/vehiculos/97.jpg",
       "asignado": "Luis Elejalde",
       "placa": "HEA0132",
       "revision": "31/08/2026",
@@ -357,6 +365,7 @@
     {
       "id": 98,
       "nombre": "Hilux Blanca",
+      "foto": "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/vehiculos/98.jpg",
       "asignado": "Danielle Toffanello",
       "placa": "HDD1049",
       "revision": "2026",
