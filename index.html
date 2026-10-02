@@ -201,11 +201,12 @@
             <a id="vista-listado" data-vista="listado" aria-current="page" class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-teal-700 bg-teal-50/60 hover:bg-teal-50" href="#listado">
               <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
               <span>Vista Listado</span>
-              <svg class="w-3.5 h-3.5 ml-auto text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg>
+              <svg id="vista-listado-check" class="w-3.5 h-3.5 ml-auto text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg>
             </a>
             <a id="vista-cuadricula" data-vista="cuadricula" class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50" href="#cuadricula">
               <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 5a1 1 0 011-1h5a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM13 5a1 1 0 011-1h5a1 1 0 011 1v5a1 1 0 01-1 1h-5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h5a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1v-5zM13 13a1 1 0 011-1h5a1 1 0 011 1v5a1 1 0 01-1 1h-5a1 1 0 01-1-1v-5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
               <span>Vista Cuadrícula</span>
+              <svg id="vista-cuadricula-check" class="hidden w-3.5 h-3.5 ml-auto text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg>
             </a>
           </div>
         </div>
@@ -245,6 +246,15 @@
             </div>
             <input id="search-input" class="w-full pl-9 pr-4 py-2 bg-white text-sm text-slate-700 rounded-lg border border-slate-200 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 placeholder-slate-400 shadow-sm transition-all" placeholder="Buscar placa, modelo..." type="text">
           </div>
+          <!-- Conmutador rápido de vista: Lista / Cuadrícula -->
+          <div id="view-switcher" class="hidden sm:inline-flex items-center bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+            <button id="view-toggle-list" type="button" title="Vista Lista" class="p-1.5 rounded bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors" aria-pressed="true">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            </button>
+            <button id="view-toggle-grid" type="button" title="Vista Cuadrícula" class="p-1.5 rounded text-slate-400 hover:text-slate-700 transition-colors" aria-pressed="false">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            </button>
+          </div>
           <!-- Visible sin funcionalidad por ahora -->
           <button id="btn-new-vehicle" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 shrink-0" type="button">
             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
@@ -254,8 +264,14 @@
       </div>
     </section>
 
+    <!-- Píldoras de filtro por estado (visibles en Vista Cuadrícula) -->
+    <div id="status-filters-container" class="hidden mt-5 flex items-center gap-2 overflow-x-auto pb-1" data-purpose="status-filters"></div>
+
     <!-- Listado de vehículos (render dinámico) -->
     <section id="vehicles-container" class="space-y-4" data-purpose="vehicles-list"></section>
+
+    <!-- Cuadrícula responsive de vehículos (render dinámico, 4 columnas en XL) -->
+    <section id="vehicles-grid-container" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" data-purpose="vehicles-grid"></section>
   </main>
 </div>
 
@@ -292,7 +308,8 @@ const estado = {
   cargando: false,
   datosCargados: false,
   errorCarga: null,
-  vistaListado: "listado"    // opción seleccionada por defecto en el menú Vehículos
+  vistaListado: "listado",   // vista activa: 'listado' | 'cuadricula'
+  filtroEstado: "todos"      // píldora activa: 'todos' | 'apto' | 'obs' | 'mantenimiento' | 'no-apto'
 };
 
 /* ------------------------------ Utilidades ------------------------------- */
@@ -343,6 +360,44 @@ function clasesBadge(valor) {
     return { badge: "bg-slate-100 text-slate-700 border-slate-300", punto: "bg-slate-500" };
   }
   return { badge: "bg-slate-100 text-slate-700 border-slate-300", punto: "bg-slate-500" };
+}
+
+/* Colores del badge superpuesto en la foto (Vista Cuadrícula, según plantilla):
+   Apto = azul, No Apto = rose, Con observaciones = ámbar, En Mantenimiento = gris */
+function clasesBadgeCuadricula(valor) {
+  const texto = normalizarTexto(valor);
+  if (texto === "apto") {
+    return { badge: "bg-blue-50 text-blue-700 border-blue-200", punto: "bg-blue-600" };
+  }
+  if (texto.startsWith("no apto")) {
+    return { badge: "bg-rose-50 text-rose-700 border-rose-200", punto: "bg-rose-600" };
+  }
+  if (texto.includes("observacion")) {
+    return { badge: "bg-amber-50 text-amber-700 border-amber-200", punto: "bg-amber-500" };
+  }
+  if (texto.includes("mantenimiento")) {
+    return { badge: "bg-slate-100 text-slate-700 border-slate-300", punto: "bg-slate-500" };
+  }
+  return { badge: "bg-slate-100 text-slate-700 border-slate-300", punto: "bg-slate-500" };
+}
+
+/* ------------------------- Filtros por estado ---------------------------- */
+const FILTROS_ESTADO = [
+  { clave: "todos", etiqueta: "Todos", valor: null },
+  { clave: "apto", etiqueta: "Apto", valor: "Apto" },
+  { clave: "obs", etiqueta: "Apto con observaciones", valor: "Apto con observaciones" },
+  { clave: "mantenimiento", etiqueta: "En mantenimiento", valor: "En Mantenimiento" },
+  { clave: "no-apto", etiqueta: "No Apto", valor: "No Apto" }
+];
+
+/* Clave de filtro ('apto' | 'no-apto' | 'obs' | 'mantenimiento') del estado */
+function claveDeEstado(valor) {
+  const texto = normalizarTexto(valor);
+  if (texto === "apto") return "apto";
+  if (texto.startsWith("no apto")) return "no-apto";
+  if (texto.includes("observacion")) return "obs";
+  if (texto.includes("mantenimiento")) return "mantenimiento";
+  return "otros";
 }
 
 /* Crea un <svg> con una o varias rutas (iconos de las tarjetas) */
@@ -612,7 +667,151 @@ function crearTarjeta(vehiculo) {
   return tarjeta;
 }
 
-/* ------------------------------ Render listado --------------------------- */
+/* ------------------- Vista Cuadrícula (base_vista_cuadricula) ------------- */
+function crearTarjetaCuadricula(vehiculo) {
+  const tarjeta = document.createElement("article");
+  tarjeta.className = "vehicle-card bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col";
+  tarjeta.dataset.status = claveDeEstado(vehiculo["estado-vehicular"]);
+
+  /* Imagen con badge superpuesto del estado */
+  const marco = document.createElement("div");
+  marco.className = "relative w-full aspect-[16/10] overflow-hidden bg-slate-100";
+
+  const urlFoto = resolverFoto(vehiculo.foto);
+  if (urlFoto) {
+    const img = document.createElement("img");
+    img.src = urlFoto;
+    img.alt = (vehiculo.nombre || "Vehículo") + " CISA";
+    img.loading = "lazy";
+    img.className = "w-full h-full object-cover transition-transform duration-300 hover:scale-105";
+    img.addEventListener("error", () => {
+      img.remove();
+      marco.append(crearReservaFotoCuadricula());
+    });
+    marco.append(img);
+  } else {
+    marco.append(crearReservaFotoCuadricula());
+  }
+
+  const overlay = document.createElement("div");
+  overlay.className = "absolute top-2.5 left-2.5";
+  const colores = clasesBadgeCuadricula(vehiculo["estado-vehicular"]);
+  const badge = document.createElement("span");
+  badge.className = "inline-flex items-center gap-1.5 " + colores.badge +
+    " font-medium px-2.5 py-1 rounded-full text-xs shadow-sm backdrop-blur-sm bg-opacity-95";
+  const punto = document.createElement("span");
+  punto.className = "w-1.5 h-1.5 rounded-full " + colores.punto;
+  const textoBadge = document.createElement("span");
+  textoBadge.textContent = "Estado: " + (vehiculo["estado-vehicular"] || "Sin estado");
+  badge.append(punto, textoBadge);
+  overlay.append(badge);
+  marco.append(overlay);
+  tarjeta.append(marco);
+
+  /* Cuerpo: categoría/tipo, nombre, placa y Ver Ficha */
+  const cuerpo = document.createElement("div");
+  cuerpo.className = "p-4 flex flex-col flex-1 justify-between gap-3";
+
+  const bloqueNombre = document.createElement("div");
+  const categoria = document.createElement("span");
+  categoria.className = "text-[11px] uppercase tracking-wider font-semibold text-slate-400";
+  categoria.textContent = vehiculo.tipo || "Vehículo";
+  const h3 = document.createElement("h3");
+  h3.className = "text-base font-semibold text-slate-900 line-clamp-1 mt-0.5";
+  h3.textContent = vehiculo.nombre || "Vehículo " + (vehiculo.id ?? "");
+  bloqueNombre.append(categoria, h3);
+
+  const pie = document.createElement("div");
+  pie.className = "flex items-center justify-between pt-2 border-t border-slate-100";
+  const placa = document.createElement("span");
+  placa.className = "bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 font-medium";
+  placa.textContent = vehiculo.placa || "—";
+  const btnFicha = document.createElement("button");
+  btnFicha.type = "button";
+  btnFicha.className = "border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors";
+  btnFicha.textContent = "Ver Ficha";   // sin funcionalidad por ahora
+  pie.append(placa, btnFicha);
+
+  cuerpo.append(bloqueNombre, pie);
+  tarjeta.append(cuerpo);
+  return tarjeta;
+}
+
+/* Reserva visual cuando la foto falta o no carga (misma altura 16/10) */
+function crearReservaFotoCuadricula() {
+  const div = document.createElement("div");
+  div.className = "absolute inset-0 flex items-center justify-center text-slate-300";
+  div.append(crearSvgIcono(RUTA_ICONO_CAMION, "w-10 h-10", "1.6"));
+  return div;
+}
+
+/* Píldoras de filtro por estado con contadores dinámicos */
+function renderPildorasFiltro() {
+  const contenedor = $("status-filters-container");
+  contenedor.innerHTML = "";
+  FILTROS_ESTADO.forEach((filtro) => {
+    const cantidad = filtro.clave === "todos"
+      ? estado.vehiculos.length
+      : estado.vehiculos.filter((v) => claveDeEstado(v["estado-vehicular"]) === filtro.clave).length;
+    const activa = estado.filtroEstado === filtro.clave;
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.dataset.filtro = filtro.clave;
+    boton.className = "status-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-colors " +
+      (activa
+        ? "bg-teal-700 text-white shadow-sm"
+        : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300");
+    boton.textContent = filtro.etiqueta + " (" + cantidad + ")";
+    boton.addEventListener("click", () => {
+      estado.filtroEstado = filtro.clave;
+      renderPildorasFiltro();
+      render();
+    });
+    contenedor.append(boton);
+  });
+}
+/* ------------------- Conmutación Listado <-> Cuadrícula ------------------- */
+function marcarOpcionMenu(vista) {
+  const activa = "flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-teal-700 bg-teal-50/60 hover:bg-teal-50";
+  const inactiva = "flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50";
+  [["vista-listado", "listado"], ["vista-cuadricula", "cuadricula"]].forEach(([id, clave]) => {
+    const enlace = $(id);
+    const esActiva = clave === vista;
+    enlace.className = esActiva ? activa : inactiva;
+    if (esActiva) enlace.setAttribute("aria-current", "page");
+    else enlace.removeAttribute("aria-current");
+    $(id + "-check").classList.toggle("hidden", !esActiva);
+  });
+}
+
+function marcarTogglesRapidos(vista) {
+  const activo = "p-1.5 rounded bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors";
+  const inactivo = "p-1.5 rounded text-slate-400 hover:text-slate-700 transition-colors";
+  [["view-toggle-list", "listado"], ["view-toggle-grid", "cuadricula"]].forEach(([id, clave]) => {
+    const boton = $(id);
+    const esActivo = clave === vista;
+    boton.className = esActivo ? activo : inactivo;
+    boton.setAttribute("aria-pressed", esActivo ? "true" : "false");
+  });
+}
+
+/* Cambia entre Vista Listado y Vista Cuadrícula */
+function cambiarVistaVehiculos(vista) {
+  estado.vistaVehiculos = vista;
+  estado.vistaListado = vista;
+  $("page-title").textContent = vista === "cuadricula"
+    ? "Listado de Vehículos - Vista Cuadrícula"
+    : "Listado de Vehículos - Vista Listado";
+  marcarOpcionMenu(vista);
+  marcarTogglesRapidos(vista);
+
+  const esCuadricula = vista === "cuadricula";
+  $("vehicles-container").classList.toggle("hidden", esCuadricula);
+  $("vehicles-grid-container").classList.toggle("hidden", !esCuadricula);
+  $("status-filters-container").classList.toggle("hidden", !esCuadricula);
+  render();
+}
+
 function mensajeListado(mensaje, clases) {
   const div = document.createElement("div");
   div.className = clases || "bg-white rounded-xl border border-slate-200/80 p-10 text-center";
@@ -653,11 +852,18 @@ function render() {
     contador.textContent = "Cargando…";
   }
 
-  const contenedor = $("vehicles-container");
+  /* Píldoras con contadores dinámicos */
+  renderPildorasFiltro();
+
+  /* Contenedor según la vista activa */
+  const esCuadricula = estado.vistaVehiculos === "cuadricula";
+  const contenedor = esCuadricula ? $("vehicles-grid-container") : $("vehicles-container");
   contenedor.innerHTML = "";
+  const clasesMensaje = "bg-white rounded-xl border border-slate-200/80 p-10 text-center" +
+    (esCuadricula ? " col-span-full" : "");
 
   if (estado.cargando) {
-    const carga = mensajeListado("Cargando vehículos desde Cloudflare R2…");
+    const carga = mensajeListado("Cargando vehículos desde Cloudflare R2…", clasesMensaje);
     carga.firstChild.className = "text-sm text-slate-500 animate-pulse";
     contenedor.append(carga);
     return;
@@ -667,26 +873,40 @@ function render() {
     return;
   }
   if (!estado.vehiculos.length) {
-    contenedor.append(mensajeListado("El catálogo no contiene vehículos."));
+    contenedor.append(mensajeListado("El catálogo no contiene vehículos.", clasesMensaje));
     return;
   }
 
-  /* Filtro en tiempo real por nombre, placa o modelo */
+  /* Filtro en tiempo real: texto (nombre/placa/modelo) + píldora de estado */
   const consulta = normalizarTexto($("search-input").value);
-  const visibles = estado.vehiculos.filter((v) =>
-    !consulta || CAMPOS_BUSQUEDA.some((campo) => normalizarTexto(v[campo]).includes(consulta))
-  );
+  const visibles = estado.vehiculos.filter((v) => {
+    const coincideTexto = !consulta ||
+      CAMPOS_BUSQUEDA.some((campo) => normalizarTexto(v[campo]).includes(consulta));
+    const coincideEstado = estado.filtroEstado === "todos" ||
+      claveDeEstado(v["estado-vehicular"]) === estado.filtroEstado;
+    return coincideTexto && coincideEstado;
+  });
 
   if (!visibles.length) {
-    contenedor.append(mensajeListado("Ningún vehículo coincide con la búsqueda."));
+    contenedor.append(mensajeListado("Ningún vehículo coincide con la búsqueda o el filtro.", clasesMensaje));
     return;
   }
-  visibles.forEach((v) => contenedor.append(crearTarjeta(v)));
+  visibles.forEach((v) => contenedor.append(esCuadricula ? crearTarjetaCuadricula(v) : crearTarjeta(v)));
 }
 
 /* ----------------------------- Inicialización ---------------------------- */
 pinInput.addEventListener("input", updateDots);
 $("search-input").addEventListener("input", render);
+$("vista-listado").addEventListener("click", (evento) => {
+  evento.preventDefault();
+  cambiarVistaVehiculos("listado");
+});
+$("vista-cuadricula").addEventListener("click", (evento) => {
+  evento.preventDefault();
+  cambiarVistaVehiculos("cuadricula");
+});
+$("view-toggle-list").addEventListener("click", () => cambiarVistaVehiculos("listado"));
+$("view-toggle-grid").addEventListener("click", () => cambiarVistaVehiculos("cuadricula"));
 cargarVehiculos();   // precarga de datos mientras se muestra el login
 </script>
 </body>
