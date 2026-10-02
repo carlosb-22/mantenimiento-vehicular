@@ -275,6 +275,245 @@
   </main>
 </div>
 
+<!-- ============================================================
+     VISTA 3: FICHA TÉCNICA DEL VEHÍCULO (estructura de base_ficha.html)
+     ============================================================ -->
+<section id="view-vehicle-detail" class="hidden flex-1 flex flex-col">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col w-full">
+
+      <!-- Navegación superior y encabezado -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between pb-6 gap-4">
+        <div class="flex flex-col">
+          <a id="btn-back-to-list" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-teal-600 font-medium transition-colors mb-2" href="#vehiculos">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+            Volver al listado de vehículos
+          </a>
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight font-sans">Visualización de la ficha del Vehículo</h1>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 uppercase tracking-wider">Ficha Técnica CISA-FT</span>
+          </div>
+          <p class="text-sm text-slate-500 mt-1">Detalle técnico, legal y especificaciones mecánicas del automotor registrado en la flota activa.</p>
+        </div>
+      </div>
+
+      <!-- Hero: foto principal, selector de estado y odómetro -->
+      <div class="relative overflow-hidden rounded-xl bg-white border border-slate-200 p-6 mb-8 shadow-sm">
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-start justify-between gap-6">
+          <div class="flex flex-col sm:flex-row items-center gap-5">
+            <div class="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm shrink-0 w-full sm:w-64 h-44 bg-slate-100">
+              <img id="detail-vehicle-photo" alt="Fotografía del Automotor" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" src="">
+              <div class="absolute top-2.5 left-3">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-900/80 text-white backdrop-blur-sm shadow-sm">
+                  <span class="material-symbols-outlined text-[12px] text-teal-400">check_circle</span> Foto Principal
+                </span>
+              </div>
+            </div>
+            <div class="flex flex-col gap-3 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-teal-50 text-teal-700 border border-teal-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-teal-500 mr-1.5"></span> Flota Activa CISA
+                </span>
+                <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                  <span class="material-symbols-outlined text-[13px]">visibility</span> Vista Frontal
+                </span>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-slate-900 leading-tight font-sans">Ficha de Identificación Visual</h2>
+                <p class="text-xs text-slate-500 leading-relaxed max-w-sm mt-0.5">Fotografía cargada y verificada para la inspección física previa al alta de la unidad en flota operativa.</p>
+              </div>
+              <!-- Selector de Estado Operativo -->
+              <div class="flex flex-col gap-2 pt-1 border-t border-slate-100">
+                <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
+                  <span>Estado de Operatividad</span>
+                  <span class="text-[10px] font-normal text-slate-400">Seleccione condición actual</span>
+                </label>
+                <div id="detail-status-selector" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  <button id="status-btn-apto" type="button" data-status="apto" class="status-btn px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span><span>Apto</span>
+                  </button>
+                  <button id="status-btn-no-apto" type="button" data-status="no-apto" class="status-btn px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span><span>No Apto</span>
+                  </button>
+                  <button id="status-btn-observaciones" type="button" data-status="observaciones" class="status-btn px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span><span>Con Observaciones</span>
+                  </button>
+                  <button id="status-btn-mantenimiento" type="button" data-status="mantenimiento" class="status-btn px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100">
+                    <span class="w-2 h-2 rounded-full bg-orange-500 shrink-0"></span><span>En Mantenimiento</span>
+                  </button>
+                </div>
+                <!-- Observaciones técnicas (sólo visibles en estado "Con Observaciones") -->
+                <div id="status-observaciones-container" class="hidden flex-col gap-1.5 mt-1 bg-amber-50/60 p-3 rounded-lg border border-amber-200/80 transition-all">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-semibold text-amber-800 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-sm text-amber-600">edit_note</span> Observaciones Técnicas
+                    </span>
+                    <span class="text-[10px] text-amber-700/80 font-medium">Requerido para este estado</span>
+                  </div>
+                  <textarea rows="2" class="w-full text-xs text-slate-700 bg-white border border-amber-200 rounded-md p-2 focus:ring-1 focus:ring-amber-500 focus:outline-none placeholder:text-slate-400" placeholder="Detalle de las observaciones técnicas o mecánicas detectadas..."></textarea>
+                  <div class="flex items-center justify-between mt-0.5">
+                    <span class="text-[10px] text-slate-400">Se registrarán con firma del inspector activo</span>
+                    <button type="button" class="text-[11px] font-semibold text-amber-700 hover:text-amber-800 flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-200 transition-colors">
+                      <span class="material-symbols-outlined text-[13px]">save</span> Guardar nota
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Odómetro y telemetría -->
+          <div class="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 lg:self-start lg:min-w-[180px]">
+            <div class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100 shadow-sm">
+              <div class="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 border border-teal-100">
+                <span class="material-symbols-outlined text-lg">speed</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Odómetro Actual</span>
+                <span id="detail-odometer" class="text-sm text-slate-800 font-bold font-mono">N/A</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100 shadow-sm">
+              <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
+                <span class="material-symbols-outlined text-lg">sensors</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Telemetría OBD-II</span>
+                <span class="text-xs text-amber-600 font-bold flex items-center gap-1">Pendiente Enlace</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form class="space-y-4" onsubmit="event.preventDefault();">
+        <!-- SECCIÓN 1: DATOS GENERALES -->
+        <section class="accordion-item rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden transition-all duration-200">
+          <button id="ficha-acordeon-1" aria-controls="collapse-section-1" aria-expanded="false" class="accordion-header w-full text-left p-5 md:px-6 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/80 transition-colors focus:outline-none focus:bg-slate-50" data-target="#collapse-section-1" type="button">
+            <div class="flex items-center gap-3.5 min-w-0">
+              <div class="w-10 h-10 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600 shrink-0">
+                <span class="material-symbols-outlined text-xl">assignment</span>
+              </div>
+              <div class="min-w-0">
+                <h3 class="text-base text-slate-900 font-bold leading-tight">1. Datos Generales</h3>
+                <p class="text-xs text-slate-500 truncate mt-0.5">Identificación básica y clasificación en inventario</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 text-slate-500 group-hover:bg-slate-200">
+                <svg id="ficha-chevron-1" class="chevron-icon w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              </div>
+            </div>
+          </button>
+          <div class="accordion-collapse border-t border-slate-100 p-6 bg-white hidden" id="collapse-section-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Nombre de la Unidad / Alias</span><span id="detail-vehicle-name" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Marca</span><span id="detail-vehicle-brand" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Modelo</span><span id="detail-vehicle-model" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Año de Fabricación</span><span id="detail-vehicle-year" class="text-sm font-semibold font-mono text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Color de Carrocería</span><span id="detail-vehicle-color" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Tipo de Vehículo</span><span id="detail-vehicle-type" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 sm:col-span-2 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Chofer / Operador Asignado</span><span id="detail-vehicle-driver" class="text-sm font-semibold text-slate-800">N/A</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECCIÓN 2: DATOS LEGALES -->
+        <section class="accordion-item rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden transition-all duration-200">
+          <button id="ficha-acordeon-2" aria-controls="collapse-section-2" aria-expanded="false" class="accordion-header w-full text-left p-5 md:px-6 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/80 transition-colors focus:outline-none focus:bg-slate-50" data-target="#collapse-section-2" type="button">
+            <div class="flex items-center gap-3.5 min-w-0">
+              <div class="w-10 h-10 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600 shrink-0">
+                <span class="material-symbols-outlined text-xl">gavel</span>
+              </div>
+              <div class="min-w-0">
+                <h3 class="text-base text-slate-900 font-bold leading-tight">2. Datos Legales</h3>
+                <p class="text-xs text-slate-500 truncate mt-0.5">Títulos, placas vehiculares y vigencia regulatoria</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 text-slate-500 group-hover:bg-slate-200">
+                <svg id="ficha-chevron-2" class="chevron-icon w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              </div>
+            </div>
+          </button>
+          <div class="accordion-collapse border-t border-slate-100 p-6 bg-white hidden" id="collapse-section-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Placa de Circulación</span><div class="flex items-center gap-2"><span class="material-symbols-outlined text-teal-600 text-base">badge</span><span id="detail-vehicle-plate" class="text-sm font-bold uppercase tracking-wider text-teal-700">N/A</span></div></div>
+              <div class="flex flex-col gap-1.5 lg:col-span-2 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><div class="flex items-center justify-between"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Número de VIN / Chasis</span><span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">17 CARACTERES</span></div><span id="detail-vehicle-vin" class="text-sm font-bold font-mono tracking-wider text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Propietario / Razón Social</span><span id="detail-vehicle-owner" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Próxima Revisión Técnica</span><span id="detail-vehicle-next-revision" class="text-sm font-semibold font-mono text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">No. Póliza Seguro Flotante</span><span id="ficha-campo-poliza" class="text-sm font-semibold font-mono text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Centro de Inspección Autorizado</span><span id="ficha-campo-centroInspeccion" class="text-sm font-semibold text-slate-800">N/A</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECCIÓN 3: DATOS MECÁNICOS -->
+        <section class="accordion-item rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden transition-all duration-200">
+          <button id="ficha-acordeon-3" aria-controls="collapse-section-3" aria-expanded="false" class="accordion-header w-full text-left p-5 md:px-6 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/80 transition-colors focus:outline-none focus:bg-slate-50" data-target="#collapse-section-3" type="button">
+            <div class="flex items-center gap-3.5 min-w-0">
+              <div class="w-10 h-10 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600 shrink-0">
+                <span class="material-symbols-outlined text-xl">precision_manufacturing</span>
+              </div>
+              <div class="min-w-0">
+                <h3 class="text-base text-slate-900 font-bold leading-tight">3. Datos Mecánicos</h3>
+                <p class="text-xs text-slate-500 truncate mt-0.5">Motor, combustible, transmisión y dirección</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 text-slate-500 group-hover:bg-slate-200">
+                <svg id="ficha-chevron-3" class="chevron-icon w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              </div>
+            </div>
+          </button>
+          <div class="accordion-collapse border-t border-slate-100 p-6 bg-white hidden" id="collapse-section-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Modelo de Motor</span><span id="detail-vehicle-engine-model" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Tipo de Combustible</span><span id="detail-vehicle-fuel" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Código Serial Motor</span><span id="ficha-campo-codigoMotor" class="text-sm font-semibold font-mono text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Cilindrada / Cilindraje</span><span id="ficha-campo-cilindrada" class="text-sm font-semibold font-mono text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Potencia Dinamómetro</span><span id="ficha-campo-potencia" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Capacidad de Tanque</span><span id="ficha-campo-capacidadTanqueGal" class="text-sm font-semibold font-mono text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Tipo de Transmisión</span><span id="ficha-campo-transmision" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Sistema de Dirección</span><span id="ficha-campo-sistemaDireccion" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Viscosidad Aceite Recomendado</span><span id="ficha-campo-aceite" class="text-sm font-semibold text-slate-800">N/A</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECCIÓN 4: DATOS ELÉCTRICOS -->
+        <section class="accordion-item rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden transition-all duration-200">
+          <button id="ficha-acordeon-4" aria-controls="collapse-section-4" aria-expanded="false" class="accordion-header w-full text-left p-5 md:px-6 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/80 transition-colors focus:outline-none focus:bg-slate-50" data-target="#collapse-section-4" type="button">
+            <div class="flex items-center gap-3.5 min-w-0">
+              <div class="w-10 h-10 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600 shrink-0">
+                <span class="material-symbols-outlined text-xl">bolt</span>
+              </div>
+              <div class="min-w-0">
+                <h3 class="text-base text-slate-900 font-bold leading-tight">4. Datos Eléctricos</h3>
+                <p class="text-xs text-slate-500 truncate mt-0.5">Voltajes, capacidad acumuladora y fusibles de potencia</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 text-slate-500 group-hover:bg-slate-200">
+                <svg id="ficha-chevron-4" class="chevron-icon w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              </div>
+            </div>
+          </button>
+          <div class="accordion-collapse border-t border-slate-100 p-6 bg-white hidden" id="collapse-section-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Voltaje Nominal del Sistema</span><span id="ficha-campo-voltaje" class="text-sm font-semibold font-mono text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Capacidad de Batería</span><span id="ficha-campo-bateria" class="text-sm font-semibold font-mono text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Capacidad Arranque en Frío (CCA)</span><span id="ficha-campo-cca" class="text-sm font-semibold font-mono text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Fusible Maestro / Principal</span><span id="ficha-campo-fusible" class="text-sm font-semibold font-mono text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Rango Operativo Alternador</span><span id="ficha-campo-voltajeAlternador" class="text-sm font-semibold text-slate-800">N/A</span></div>
+              <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-50 border border-slate-200/70"><span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Motor de Arranque</span><span id="ficha-campo-motorArranque" class="text-sm font-semibold text-slate-800">N/A</span></div>
+            </div>
+          </div>
+        </section>
+      </form>
+    </div>
+  </main>
+</section>
+
 <script>
 /* ==========================================================================
    Sistema Mantenimiento — SPA
@@ -655,6 +894,7 @@ function crearTarjeta(vehiculo) {
   btnFicha.type = "button";
   btnFicha.className = "px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50/60 rounded-md transition-colors border border-slate-200";
   btnFicha.textContent = "Ver Ficha";
+  btnFicha.addEventListener("click", () => abrirFicha(vehiculo.id));
   const btnEditar = document.createElement("button");
   btnEditar.type = "button";
   btnEditar.title = "Editar";
@@ -729,7 +969,8 @@ function crearTarjetaCuadricula(vehiculo) {
   const btnFicha = document.createElement("button");
   btnFicha.type = "button";
   btnFicha.className = "border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors";
-  btnFicha.textContent = "Ver Ficha";   // sin funcionalidad por ahora
+  btnFicha.textContent = "Ver Ficha";   // abre la ficha técnica del vehículo
+  btnFicha.addEventListener("click", () => abrirFicha(vehiculo.id));
   pie.append(placa, btnFicha);
 
   cuerpo.append(bloqueNombre, pie);
@@ -894,6 +1135,123 @@ function render() {
   visibles.forEach((v) => contenedor.append(esCuadricula ? crearTarjetaCuadricula(v) : crearTarjeta(v)));
 }
 
+/* ------------------- Vista Ficha Técnica (base_ficha) --------------------- */
+const FOTO_PLACEHOLDER = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400">' +
+  '<rect width="640" height="400" fill="#e2e8f0"/>' +
+  '<g fill="none" stroke="#94a3b8" stroke-width="10" stroke-linejoin="round">' +
+  '<rect x="230" y="150" width="180" height="130" rx="12"/><path d="M280 150l24-34h72l24 34"/>' +
+  '<circle cx="290" cy="282" r="20"/><circle cx="350" cy="282" r="20"/></g>' +
+  '<text x="320" y="352" text-anchor="middle" font-family="system-ui,sans-serif" font-size="30" fill="#94a3b8">Sin fotografía</text></svg>'
+);
+
+/* id del DOM -> campo del JSON (los que tienen id requerido) */
+const MAPA_FICHA = [
+  ["detail-vehicle-name", "nombre"],
+  ["detail-vehicle-brand", "marca"],
+  ["detail-vehicle-model", "modelo"],
+  ["detail-vehicle-year", "anio"],
+  ["detail-vehicle-color", "color"],
+  ["detail-vehicle-type", "tipo"],
+  ["detail-vehicle-driver", "asignado"],
+  ["detail-vehicle-plate", "placa"],
+  ["detail-vehicle-vin", "vin"],
+  ["detail-vehicle-owner", "propietario"],
+  ["detail-vehicle-engine-model", "modeloMotor"],
+  ["detail-vehicle-fuel", "combustible"],
+  ["detail-odometer", "odometro"]   // el JSON aún no publica kilometraje -> N/A
+];
+
+/* Campos adicionales de la plantilla sin id requerido (id generado: ficha-campo-X) */
+const CAMPOS_EXTRA_FICHA = [
+  "poliza", "centroInspeccion", "codigoMotor", "cilindrada", "potencia",
+  "capacidadTanqueGal", "transmision", "sistemaDireccion", "aceite",
+  "voltaje", "bateria", "cca", "fusible", "voltajeAlternador", "motorArranque"
+];
+
+/* Temas visuales del selector de estado (base_ficha.html) */
+const TEMAS_ESTADO_FICHA = {
+  apto: "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm",
+  "no-apto": "bg-rose-50 border-rose-500 text-rose-700 shadow-sm",
+  observaciones: "bg-amber-50 border-amber-500 text-amber-700 shadow-sm",
+  mantenimiento: "bg-orange-50 border-orange-500 text-orange-700 shadow-sm"
+};
+const CLASES_INACTIVAS_ESTADO = "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100";
+const BASE_BOTON_ESTADO = "status-btn px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all";
+const SELECTOR_ESTADO_FICHA = [
+  ["status-btn-apto", "apto"],
+  ["status-btn-no-apto", "no-apto"],
+  ["status-btn-observaciones", "observaciones"],
+  ["status-btn-mantenimiento", "mantenimiento"]
+];
+
+/* Texto a mostrar: N/A explícito para null/undefined/vacío */
+function textoCampoFicha(vehiculo, campo) {
+  if (campo === "odometro") return "N/A";
+  const valor = vehiculo[campo];
+  if (valor === null || valor === undefined || String(valor).trim() === "") return "N/A";
+  if (typeof valor === "boolean") return valor ? "Sí" : "No";
+  return String(valor);
+}
+
+/* Clave del selector de estado ('observaciones' en lugar de 'obs') */
+function claveSelectorFicha(valorEstado) {
+  const clave = claveDeEstado(valorEstado);
+  return clave === "obs" ? "observaciones" : clave;
+}
+
+function sincronizarSelectorEstado(clave) {
+  SELECTOR_ESTADO_FICHA.forEach(([id, claveBoton]) => {
+    $(id).className = BASE_BOTON_ESTADO + " " +
+      (claveBoton === clave ? TEMAS_ESTADO_FICHA[claveBoton] : CLASES_INACTIVAS_ESTADO);
+  });
+  const observaciones = $("status-observaciones-container");
+  observaciones.classList.toggle("hidden", clave !== "observaciones");
+  observaciones.classList.toggle("flex", clave === "observaciones");
+}
+
+function establecerAcordeonesFicha(expandida) {
+  ["1", "2", "3", "4"].forEach((numero) => {
+    const expandido = numero === String(expandida);
+    $("collapse-section-" + numero).classList.toggle("hidden", !expandido);
+    $("ficha-acordeon-" + numero).setAttribute("aria-expanded", expandido ? "true" : "false");
+    $("ficha-chevron-" + numero).classList.toggle("rotate-180", expandido);
+  });
+}
+
+function renderizarFicha(vehiculo) {
+  const foto = $("detail-vehicle-photo");
+  foto.src = resolverFoto(vehiculo.foto) || FOTO_PLACEHOLDER;
+
+  MAPA_FICHA.forEach(([id, campo]) => {
+    $(id).textContent = textoCampoFicha(vehiculo, campo);
+  });
+  $("detail-vehicle-next-revision").textContent = vehiculo.proxima_revision
+    ? formatearFechaISO(vehiculo.proxima_revision)
+    : "N/A";
+  CAMPOS_EXTRA_FICHA.forEach((campo) => {
+    $("ficha-campo-" + campo).textContent = textoCampoFicha(vehiculo, campo);
+  });
+  sincronizarSelectorEstado(claveSelectorFicha(vehiculo["estado-vehicular"]));
+  establecerAcordeonesFicha(1);
+}
+
+function abrirFicha(idVehiculo) {
+  const vehiculo = estado.vehiculos.find((v) => String(v.id) === String(idVehiculo));
+  if (!vehiculo) return;
+  estado.vehiculoFicha = idVehiculo;
+  renderizarFicha(vehiculo);
+  $("view-app").classList.add("hidden");
+  $("view-vehicle-detail").classList.remove("hidden");
+  estado.vista = "ficha";
+}
+
+function volverAlListado() {
+  $("view-vehicle-detail").classList.add("hidden");
+  $("view-app").classList.remove("hidden");
+  estado.vista = "app";   // conserva el sub-layout activo (listado o cuadrícula)
+}
+
 /* ----------------------------- Inicialización ---------------------------- */
 pinInput.addEventListener("input", updateDots);
 $("search-input").addEventListener("input", render);
@@ -907,6 +1265,22 @@ $("vista-cuadricula").addEventListener("click", (evento) => {
 });
 $("view-toggle-list").addEventListener("click", () => cambiarVistaVehiculos("listado"));
 $("view-toggle-grid").addEventListener("click", () => cambiarVistaVehiculos("cuadricula"));
+$("btn-back-to-list").addEventListener("click", (evento) => {
+  evento.preventDefault();
+  volverAlListado();
+});
+SELECTOR_ESTADO_FICHA.forEach(([id, claveBoton]) => {
+  $(id).addEventListener("click", () => sincronizarSelectorEstado(claveBoton));
+});
+["1", "2", "3", "4"].forEach((numero) => {
+  $("ficha-acordeon-" + numero).addEventListener("click", () => {
+    const expandido = $("ficha-acordeon-" + numero).getAttribute("aria-expanded") === "true";
+    establecerAcordeonesFicha(expandido ? null : numero);
+  });
+});
+$("detail-vehicle-photo").addEventListener("error", () => {
+  $("detail-vehicle-photo").src = FOTO_PLACEHOLDER;
+});
 cargarVehiculos();   // precarga de datos mientras se muestra el login
 </script>
 </body>
