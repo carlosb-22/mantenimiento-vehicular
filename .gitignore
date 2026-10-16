@@ -1,0 +1,4 @@
+# Cache y estado locales de Wrangler
+.wrangler/
+
+node_modules/

@@ -535,7 +535,7 @@
    ========================================================================== */
 
 /* ------------------------------ Configuración ---------------------------- */
-const URL_CATALOGO = "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/catalogo/vehiculos_empresa.json";
+const URL_API_VEHICULOS = "/api/vehiculos";   // API (Pages Functions) sobre la base D1 "mantenimiento-db"
 const BASE_FOTOS = "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/vehiculos/";
 const LOGIN_DELAY_MS = 500;                       // pequeña espera de "verificación"
 const CAMPOS_BUSQUEDA = ["nombre", "placa", "modelo"];
@@ -556,7 +556,7 @@ const USUARIOS = [
 const estado = {
   vista: "login",            // 'login' | 'app' | 'ficha'
   usuario: null,             // usuario logueado: { nombre, pin, rol }
-  vehiculos: [],             // datos obtenidos del JSON de R2
+  vehiculos: [],             // datos obtenidos de la API /api/vehiculos (D1)
   cargando: false,
   datosCargados: false,
   errorCarga: null,
@@ -780,14 +780,14 @@ function marcarPestanaVehiculosActiva() {
   choferes.classList.remove("text-teal-600");
 }
 
-/* --------------------- Carga de datos (Cloudflare R2) -------------------- */
+/* --------------------- Carga de datos (API en Cloudflare D1) ------------- */
 async function cargarVehiculos(forzar = false) {
   if (estado.cargando || (estado.datosCargados && !forzar)) return;
   estado.cargando = true;
   estado.errorCarga = null;
   render();
   try {
-    const respuesta = await fetch(URL_CATALOGO, { cache: "no-store" });
+    const respuesta = await fetch(URL_API_VEHICULOS, { cache: "no-store" });
     if (!respuesta.ok) throw new Error("HTTP " + respuesta.status + " " + respuesta.statusText);
     const datos = await respuesta.json();
     estado.vehiculos = Array.isArray(datos)
@@ -1140,7 +1140,7 @@ function render() {
     (esCuadricula ? " col-span-full" : "");
 
   if (estado.cargando) {
-    const carga = mensajeListado("Cargando vehículos desde Cloudflare R2…", clasesMensaje);
+    const carga = mensajeListado("Cargando vehículos desde la API (Cloudflare D1)…", clasesMensaje);
     carga.firstChild.className = "text-sm text-slate-500 animate-pulse";
     contenedor.append(carga);
     return;

@@ -1,0 +1,17 @@
+name = "mantenimiento-vehicular"
+compatibility_date = "2026-10-16"
+pages_build_output_dir = "."
+
+# Base de datos D1 (creada con: npx wrangler d1 create mantenimiento-db)
+[[d1_databases]]
+binding = "mantenimiento_db"
+database_name = "mantenimiento-db"
+database_id = "36483eec-51ff-4fcc-a902-5fade9b9bcd0"
+
+# Bucket R2 donde se alojan las fotos de los vehículos (vehiculos/<id>.jpg)
+[[r2_buckets]]
+binding = "FOTOS"
+bucket_name = "security-guard-cisa"
+
+# Secreto de escritura de la API (POST/PUT). No va en este archivo:
+# se configura en Pages con: wrangler pages secret put API_TOKEN --project-name mantenimiento-vehicular
