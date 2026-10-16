@@ -1,0 +1,398 @@
+<!DOCTYPE html><html lang="es"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Sistema Mantenimiento CISA - Parque Vehicular</title>
+<!-- Tailwind CSS CDN with Forms and Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              400: '#2dd4bf',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="base-layout">
+    body {
+      background-color: #f8fafc;
+      color: #334155;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased text-slate-700 bg-slate-50">
+<!-- BEGIN: TopBar (Matching Screen 4 & Screen 6) -->
+<header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
+<!-- Level 1: Main Header (Logo, Menu Icon & User Profile) -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+<!-- Left: Mobile Menu Toggle Icon -->
+<div class="flex items-center">
+<button aria-label="Abrir menú" class="p-2 -ml-2 text-slate-400 hover:text-slate-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500" type="button">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+<!-- Center: Stylized Brand Logo (CISA Teal) -->
+<div class="flex items-center space-x-2">
+<span class="text-2xl font-bold tracking-tight text-teal-700 font-sans">Sistema Mantenimiento CISA</span>
+</div>
+<!-- Right: User Profile -->
+<div class="flex items-center space-x-3 cursor-pointer group">
+<span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Johnson</span>
+<div class="relative">
+<div class="w-9 h-9 rounded-full bg-slate-200 border-2 border-slate-100 flex items-center justify-center overflow-hidden">
+<span class="text-xs font-semibold text-slate-600">JH</span>
+</div>
+<div class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></div>
+</div>
+<svg class="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- Level 2: Sub-bar Navigation (Vehículos & Choferes) -->
+<nav aria-label="Pestañas de Navegación Principal" class="border-t border-slate-100 bg-white">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center space-x-12">
+<!-- Tab 1: Vehículos (Active) -->
+<a aria-current="page" class="relative py-3.5 px-3 flex flex-col items-center group text-teal-700 font-semibold text-sm transition-colors" href="#">
+<div class="flex items-center space-x-2 mb-1">
+<svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M8 17H5a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v6a2 2 0 01-2 2h-3m-8 0v2a1 1 0 001 1h6a1 1 0 001-1v-2m-8 0h8M7 11h.01M17 11h.01M5 11l1.5-3.5A2 2 0 018.3 6h7.4a2 2 0 011.8 1.5L19 11" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+<span class="">Vehículos</span>
+</div>
+<!-- Active Indicator Line -->
+<span class="absolute bottom-0 left-0 right-0 h-0.5 bg-teal-600 rounded-full"></span>
+</a>
+<!-- Tab 2: Choferes (Inactive) -->
+<a class="relative py-3.5 px-3 flex flex-col items-center group text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors" href="#">
+<div class="flex items-center space-x-2 mb-1">
+<svg class="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="9" stroke-width="1.8"></circle>
+<circle cx="12" cy="12" r="3" stroke-width="1.8"></circle>
+<path d="M12 3v6M12 15v6M3 12h6M15 12h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+<span class="">Choferes</span>
+</div>
+</a>
+</div>
+</nav>
+</header>
+<!-- END: TopBar -->
+<!-- BEGIN: MainContent -->
+<main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Section Header & Controls -->
+<section class="mb-6" data-purpose="section-header">
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+<!-- Title & Counter Badge -->
+<div>
+<div class="flex items-center gap-3">
+<h1 class="text-2xl font-bold tracking-tight text-slate-800">Listado de Vehículos - Vista Cuadrícula</h1>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+              8 Unidades Registradas
+            </span>
+</div>
+<p class="mt-1 text-sm text-slate-500">
+            Supervisa el estado mecánico, condición técnica y disponibilidad visual de la flota operativa.
+          </p>
+</div>
+<!-- Controls: Quick Search, View Switcher & Primary Action -->
+<div class="flex flex-wrap items-center gap-3">
+<!-- Search Input -->
+<div class="relative w-full sm:w-64">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<input class="w-full pl-9 pr-4 py-2 bg-white text-sm text-slate-700 rounded-lg border border-slate-200 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 placeholder-slate-400 shadow-sm transition-all" id="fleet-search" placeholder="Buscar placa, modelo..." type="text">
+</div>
+<!-- View Switcher (Cuadrícula / Lista) -->
+<div class="hidden sm:inline-flex items-center bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+<button class="p-1.5 rounded bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors" title="Vista Cuadrícula">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<a class="p-1.5 rounded text-slate-400 hover:text-slate-700 transition-colors" href="#" title="Vista Lista">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</a>
+</div>
+<!-- Add Vehicle Button -->
+<button class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-teal-700 hover:bg-teal-800 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 shrink-0" type="button">
+<svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+            Nuevo Vehículo
+          </button>
+</div>
+</div>
+<!-- Status Filter Tabs / Pills -->
+<div class="mt-5 flex items-center gap-2 overflow-x-auto pb-1">
+<button class="status-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-colors bg-teal-700 text-white shadow-sm" data-filter="all">
+          Todos (8)
+        </button>
+<button class="status-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-colors bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300" data-filter="apto">
+          Apto (4)
+        </button>
+<button class="status-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-colors bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300" data-filter="obs">
+          Apto con observaciones (1)
+        </button>
+<button class="status-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-colors bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300" data-filter="mantenimiento">
+          En mantenimiento (2)
+        </button>
+<button class="status-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-colors bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300" data-filter="no-apto">
+          No Apto (1)
+        </button>
+</div>
+</section>
+<!-- 4-Column Responsive Grid ("4 en una fila") -->
+<section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="fleet-grid">
+<!-- Vehicle 1: Nissan Frontier NP300 -->
+<article class="vehicle-card bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col" data-status="no-apto">
+<div class="relative w-full aspect-[16/10] overflow-hidden bg-slate-100">
+<img alt="Nissan Frontier NP300 CISA" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8JJauYFbkILvQ_xijij7rjIbD7tcEbi90dTiSP-sa2DM6iGwekB-uOz_12ONV8gOveuQ9Nt0i6YSLspfd9QtyNVCHZ8BR4yFkdLxhzOWeOMn0M3Ig1JlyWOS2c7o1oEP6OuQF1bygUXDwXZklzPNFSIHrI_hQwkvU9MEQ7aLhJ6-tw92t22CYtko2jie1pV3-YU7DDFOBQPxwVu4aAsoyI0MrkjllLAnQQ2irgangu6Wg92ZHlHdSd6oarHKuVBJk5w">
+<div class="absolute top-2.5 left-2.5">
+<span class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 font-medium px-2.5 py-1 rounded-full text-xs shadow-sm backdrop-blur-sm bg-opacity-95">
+<span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+              Estado: No Apto
+            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1 justify-between gap-3">
+<div>
+<span class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Pickup 4x4 Diésel</span>
+<h3 class="text-base font-semibold text-slate-900 line-clamp-1 mt-0.5">Nissan Frontier NP300</h3>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-slate-100">
+<span class="bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 font-medium">HAA0729</span>
+<a class="border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors" href="#">Ver Ficha</a>
+</div>
+</div>
+</article>
+<!-- Vehicle 2: Mitsubishi Sportero L200 -->
+<article class="vehicle-card bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col" data-status="apto">
+<div class="relative w-full aspect-[16/10] overflow-hidden bg-slate-100">
+<img alt="Mitsubishi Sportero - L200" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsH4kNMqoeUpn66b0xO77LOCsF_NQBERqrCAT8LFKsmnY6F1onJwHnL7PSGxIJBr9pDramLYQ8nz1yje61cxSwED72d4TU-jjBCzHeKomVqNcBUn1g0Pr586FYhCdCZKzq8KCMzhe810cFqsU0zRbxRwj3_WsOV4OgdLKGBfTQ7QI6Ubljmzd8O4jaMKC5D5vMEfMXtmnkyVDCWodwVQp-7GYJTZR8W_rs60wqGGYAl4Inoew64l5V">
+<div class="absolute top-2.5 left-2.5">
+<span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 font-medium px-2.5 py-1 rounded-full text-xs shadow-sm backdrop-blur-sm bg-opacity-95">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+              Estado: Apto
+            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1 justify-between gap-3">
+<div>
+<span class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Pickup Doble Cabina</span>
+<h3 class="text-base font-semibold text-slate-900 line-clamp-1 mt-0.5">Mitsubishi Sportero - L200</h3>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-slate-100">
+<span class="bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 font-medium">PDG3155</span>
+<a class="border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors" href="#">Ver Ficha</a>
+</div>
+</div>
+</article>
+<!-- Vehicle 3: Toyota Land Cruiser Prado -->
+<article class="vehicle-card bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col" data-status="obs">
+<div class="relative w-full aspect-[16/10] overflow-hidden bg-slate-100">
+<img alt="Toyota Land Cruiser Prado" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5pC6tDMkb97WmyPNI7yMXfVgSma9MBiGtAePCWrXCH99f_iCol3fx9XgmAabH3dS6S9PM0oA5eb3ff2a0LqYMSuiDC6Vl7rz-jtcA33wvRbyvc4agqNV6IGSnG-YMbVJKWS3xaXxRjpY2mH_uHfvFxM0g92dbnBYhguCZVVVDde67hBtFF8qWnGCXCqEaDdbvb_GSKUmUdTqVPFXtIFQzxukm8cc7KUcDS-zDK-UlX3t_25naIGOW">
+<div class="absolute top-2.5 left-2.5">
+<span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 font-medium px-2.5 py-1 rounded-full text-xs shadow-sm backdrop-blur-sm bg-opacity-95">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+              Estado: Apto con observaciones
+            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1 justify-between gap-3">
+<div>
+<span class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">SUV Ejecutiva / Campo</span>
+<h3 class="text-base font-semibold text-slate-900 line-clamp-1 mt-0.5">Toyota Land Cruiser Prado</h3>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-slate-100">
+<span class="bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 font-medium">HDT9436</span>
+<a class="border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors" href="#">Ver Ficha</a>
+</div>
+</div>
+</article>
+<!-- Vehicle 4: Volkswagen Amarok -->
+<article class="vehicle-card bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col" data-status="mantenimiento">
+<div class="relative w-full aspect-[16/10] overflow-hidden bg-slate-100">
+<img alt="Volkswagen Amarok" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARsjn_cBizZ_Keiy8aOhGUS3k7ST3MlTRfA6rOHdDazw-Av_GhVHjqVBP5FWIpLZ7fMdTe2gfEN96Nw6YaTOx1P9QxCrFNj6DpakCaxNx86SMMiywpLYTRgC4BRRLVSPRZaIYyVJBALDqqNoWOIJGUtRQtlyzwK4bs1L2QKVj-FWEvImDn1GSW9PE3VGmLCCbe7G-GHuV-OKSC1m4Leoggj-Crt52AkBtZ_Qik9TnX-K-c9wWsbV9R">
+<div class="absolute top-2.5 left-2.5">
+<span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 font-medium px-2.5 py-1 rounded-full text-xs shadow-sm backdrop-blur-sm bg-opacity-95">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              Estado: En mantenimiento
+            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1 justify-between gap-3">
+<div>
+<span class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Pickup V6 4Motion</span>
+<h3 class="text-base font-semibold text-slate-900 line-clamp-1 mt-0.5">Volkswagen Amarok</h3>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-slate-100">
+<span class="bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 font-medium">HDD7516</span>
+<a class="border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors" href="#">Ver Ficha</a>
+</div>
+</div>
+</article>
+<!-- Vehicle 5: Toyota Hilux Blanca -->
+<article class="vehicle-card bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col" data-status="apto">
+<div class="relative w-full aspect-[16/10] overflow-hidden bg-slate-100">
+<img alt="Toyota Hilux Blanca" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkY41eJWNlRD_VPVqTeeodgK5ubGVUo4ysTWCmd2wqaNhfe1F1of8ngOb__k5VPn8hpY3pntM9FV1eK7ZoDhCBOvSI6iqbNd2nAMScvOTc5VcmWnHW5e5FyxXWEK0ouuTOO_1dYg-x28O5wMYXXX1u-KUjU3r29hRu_uO3CCxy88HLYdQMOwkz8BNezjo9-ODCfIj-SLce94VEVsVlKLo2Ts3J4EGT0CXioYaxu-muZhKHP2kCjNJF">
+<div class="absolute top-2.5 left-2.5">
+<span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 font-medium px-2.5 py-1 rounded-full text-xs shadow-sm backdrop-blur-sm bg-opacity-95">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+              Estado: Apto
+            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1 justify-between gap-3">
+<div>
+<span class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Pickup Utilitario</span>
+<h3 class="text-base font-semibold text-slate-900 line-clamp-1 mt-0.5">Toyota Hilux Blanca</h3>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-slate-100">
+<span class="bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 font-medium">HEA0132</span>
+<a class="border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors" href="#">Ver Ficha</a>
+</div>
+</div>
+</article>
+<!-- Vehicle 6: KIA K2700 Doble Cabina -->
+<article class="vehicle-card bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col" data-status="apto">
+<div class="relative w-full aspect-[16/10] overflow-hidden bg-slate-100">
+<img alt="Camión KIA Doble Cabina" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAALkCtUWKYeRPYFG9HNNE2VcHgUAFwW5iIfizpUkhiv2mqesXaD0ahmnq0BkgfcLOKXZH0eYLapomSuGbpywKQxb2MuQ-pNeBNWNDLBiuwccFqzj9KyscrNXWNtvPdZZml2ZCgs9A1dyAQ-54KElob9hOvkapyFwigMZCYSNWq6-jCOQpMG0q3A___ChCIuxkzY__yrx8N9DQrofnojh-ePTimhrEXC93e9-gdihu3G9a-AaoF5aD8">
+<div class="absolute top-2.5 left-2.5">
+<span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 font-medium px-2.5 py-1 rounded-full text-xs shadow-sm backdrop-blur-sm bg-opacity-95">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+              Estado: Apto
+            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1 justify-between gap-3">
+<div>
+<span class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Camión Ligero Carga</span>
+<h3 class="text-base font-semibold text-slate-900 line-clamp-1 mt-0.5">Camión KIA Doble Cabina</h3>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-slate-100">
+<span class="bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 font-medium">HBD3084</span>
+<a class="border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors" href="#">Ver Ficha</a>
+</div>
+</div>
+</article>
+<!-- Vehicle 7: Mazda 2500 -->
+<article class="vehicle-card bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col" data-status="apto">
+<div class="relative w-full aspect-[16/10] overflow-hidden bg-slate-100">
+<img alt="Mazda 2500" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxFfnBNw7tzkC-RkfEkM_iwQ92S974QfgV2nmbQY7aAOrXdbZfvLz6SUvfWHjCXtXeNRyYPy1hQvl3rLftiAk-s6GoBR3j-x8hQ5po_zVIEbr4oedBQ184Im1ACCrYyjkvXDhqvIG8UktQFPLnXxc8OrnOZWaoDIEdhIUYYi7AslDDm8rCzeYPU0c-xJLIR3FpuswmWbJ-xI3lf3rC3US5dvaVxW8LRRmCmAjrbgHKkc7S_WDtjbMz">
+<div class="absolute top-2.5 left-2.5">
+<span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 font-medium px-2.5 py-1 rounded-full text-xs shadow-sm backdrop-blur-sm bg-opacity-95">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+              Estado: Apto
+            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1 justify-between gap-3">
+<div>
+<span class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Pickup Diésel 4x4</span>
+<h3 class="text-base font-semibold text-slate-900 line-clamp-1 mt-0.5">Mazda 2500</h3>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-slate-100">
+<span class="bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 font-medium">HDD1049</span>
+<a class="border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors" href="#">Ver Ficha</a>
+</div>
+</div>
+</article>
+<!-- Vehicle 8: Mitsubishi Montero -->
+<article class="vehicle-card bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col" data-status="mantenimiento">
+<div class="relative w-full aspect-[16/10] overflow-hidden bg-slate-100">
+<img alt="Mitsubishi Montero" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDe4tPOCVxR_sfa36TKSbnqRy_S_f8p_GgmjikUKBKA0Kmrz4gQylKhfZyp5rIvgpbngCdcwIkbdX1-kTigLezKQ2WdhiT84bIecTDtSLjcCqGbVLnIokPp0JeTT0wHrLeF50u-RnlDIxFxHq_ap_SZID9eg0Aea-ijspcEfExoe4FW6fWi0y-hBc82nJ3L1nt-PGEwfSM441aRLVJdcupkuHqVVP8Uq7VeatRcWnQj9Bzx7NYKDdUb">
+<div class="absolute top-2.5 left-2.5">
+<span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 font-medium px-2.5 py-1 rounded-full text-xs shadow-sm backdrop-blur-sm bg-opacity-95">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              Estado: En mantenimiento
+            </span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1 justify-between gap-3">
+<div>
+<span class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">SUV Todo Terreno</span>
+<h3 class="text-base font-semibold text-slate-900 line-clamp-1 mt-0.5">Mitsubishi Montero</h3>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-slate-100">
+<span class="bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 font-medium">JAC6145</span>
+<a class="border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors" href="#">Ver Ficha</a>
+</div>
+</div>
+</article>
+</section>
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: Footer -->
+
+<!-- END: Footer -->
+<!-- Filtering and Search Script -->
+<script>
+    (function initFleetCatalog() {
+      const searchInput = document.getElementById('fleet-search');
+      const filterBtns = document.querySelectorAll('.status-filter-btn');
+      const cards = document.querySelectorAll('.vehicle-card');
+
+      let currentFilter = 'all';
+
+      function applyFilters() {
+        const query = (searchInput.value || '').toLowerCase().trim();
+
+        cards.forEach(card => {
+          const cardStatus = card.getAttribute('data-status');
+          const cardText = card.textContent.toLowerCase();
+
+          const matchesStatus = (currentFilter === 'all') || (cardStatus === currentFilter);
+          const matchesQuery = query === '' || cardText.includes(query);
+
+          if (matchesStatus && matchesQuery) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+      }
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => {
+            b.classList.remove('bg-teal-700', 'text-white', 'shadow-sm');
+            b.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+          });
+          btn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+          btn.classList.add('bg-teal-700', 'text-white', 'shadow-sm');
+
+          currentFilter = btn.getAttribute('data-filter');
+          applyFilters();
+        });
+      });
+
+      if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+      }
+    })();
+  </script>
+
+
+</body></html>
