@@ -82,10 +82,13 @@ export function filaAApi(fila) {
   return salida;
 }
 
-/* Devuelve null si el token es valido, o { estado, mensaje } si no lo es */
+/* Devuelve null si la escritura está permitida, o { estado, mensaje } si no lo está.
+   Sin cabecera Authorization se permite la escritura (decisión temporal del proyecto:
+   la autenticación de escritura se definirá más adelante). Si la cabecera llega, se valida. */
 export function comprobarToken(request, env) {
-  if (!env.API_TOKEN) return { estado: 503, mensaje: "API_TOKEN no esta configurado en el proyecto" };
   const cabecera = request.headers.get("Authorization") || "";
+  if (!cabecera) return null;
+  if (!env.API_TOKEN) return { estado: 503, mensaje: "API_TOKEN no esta configurado en el proyecto" };
   const esperado = "Bearer " + env.API_TOKEN;
   if (cabecera.length !== esperado.length) return { estado: 401, mensaje: "No autorizado" };
   let diferencias = 0;

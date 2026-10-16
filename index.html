@@ -1194,7 +1194,7 @@ function normalizarId(valor) {
 }
 
 /* Consulta el API con manejo de errores suave: si falla, el odómetro
-   simplemente permanece en "N/A" y la aplicación no se rompe. */
+   simplemente permanece en "vacío" y la aplicación no se rompe. */
 async function cargarKilometrajes(forzar = false) {
   if (estado.kilometrajes.cargando || (estado.kilometrajes.cargado && !forzar)) return;
   estado.kilometrajes.cargando = true;
@@ -1233,11 +1233,14 @@ async function cargarKilometrajes(forzar = false) {
   }
 }
 
-/* Odómetro legible: "125,430 KM" o "N/A" sin coincidencia/dato nulo */
+/* Odómetro legible: "125,430 KM"; "vacío" si no hay coincidencia, el dato es nulo, undefined o 0 */
+const TEXTO_ODOMETRO_VACIO = "vacío";
 function textoOdometro(idVehiculo) {
   const id = normalizarId(idVehiculo);
   const km = id === null ? null : estado.kilometrajes.porId[id];
-  if (km === null || km === undefined || !Number.isFinite(Number(km))) return "N/A";
+  if (km === null || km === undefined || !Number.isFinite(Number(km)) || Number(km) === 0) {
+    return TEXTO_ODOMETRO_VACIO;
+  }
   return FORMATO_KM.format(Number(km)) + " KM";
 }
 
@@ -1336,7 +1339,7 @@ function renderizarFicha(vehiculo) {
   CAMPOS_EXTRA_FICHA.forEach((campo) => {
     $("ficha-campo-" + campo).textContent = textoCampoFicha(vehiculo, campo);
   });
-  /* Odómetro desde el API externo de kilometrajes (N/A si no hay dato) */
+  /* Odómetro desde el API externo de kilometrajes ("vacío" si no hay dato) */
   $("detail-odometer").textContent = textoOdometro(vehiculo.id);
   $("status-observaciones-texto").value = vehiculo.observaciones || "";
   $("status-observaciones-texto").readOnly = !esAdmin();
@@ -1381,10 +1384,11 @@ function bloquearControlesEstado(bloqueado) {
 /* PUT /api/vehiculos/:id con Authorization: Bearer <API_TOKEN>.
    La API acepta los nombres de campo de la SPA (p. ej. "estado-vehicular"). */
 async function actualizarVehiculo(idVehiculo, cambios) {
-  if (!API_TOKEN) throw new Error("token de API no configurado en la aplicación");
+  const cabeceras = { "Content-Type": "application/json" };
+  if (API_TOKEN) cabeceras.Authorization = "Bearer " + API_TOKEN;   // opcional: la autenticación se definirá más adelante
   const respuesta = await fetch(URL_API_VEHICULOS + "/" + encodeURIComponent(idVehiculo), {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Authorization: "Bearer " + API_TOKEN },
+    headers: cabeceras,
     body: JSON.stringify(cambios),
     cache: "no-store"
   });
