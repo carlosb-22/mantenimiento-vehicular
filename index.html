@@ -894,29 +894,14 @@ function crearTarjeta(vehiculo) {
   valorPlaca.className = "text-slate-700 font-mono text-xs";
   valorPlaca.textContent = vehiculo.placa || "—";
   spanPlaca.append(rotuloPlaca, valorPlaca);
-  const separador = document.createElement("span");
-  separador.textContent = "•";
-  const spanConductor = document.createElement("span");
-  if (vehiculo.asignado) {
-    const rotulo = document.createElement("span");
-    rotulo.textContent = "Conductor: ";
-    const valor = document.createElement("strong");
-    valor.className = "text-slate-700";
-    valor.textContent = vehiculo.asignado;
-    spanConductor.append(rotulo, valor);
-  } else {
-    spanConductor.className = "text-slate-400 italic";
-    spanConductor.textContent = "Conductor: Sin Asignar";
-  }
-  filaMeta.append(spanPlaca, separador, spanConductor);
+  filaMeta.append(spanPlaca);
   datos.append(filaMeta);
   identidad.append(datos);
 
-  /* --- Detalles mecánicos: motor, combustible, próxima revisión --- */
+  /* --- Detalles mecánicos: motor, próxima revisión y odómetro --- */
   const detalles = document.createElement("div");
   detalles.className = "grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-6 text-xs text-slate-600 border-t border-slate-100 pt-3 lg:border-t-0 lg:pt-0 flex-1";
   detalles.append(datoDetalle("Motor", vehiculo.modeloMotor || "—", "w-48"));
-  detalles.append(datoDetalle("Combustible", vehiculo.combustible || "—", "w-40"));
   detalles.append(datoDetalle(
     "Próx. Revisión",
     vehiculo.proxima_revision ? formatearFechaISO(vehiculo.proxima_revision) : "—",
