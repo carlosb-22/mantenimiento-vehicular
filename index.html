@@ -259,7 +259,7 @@
   <!-- Contenido principal -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Encabezado de acciones y filtros -->
-    <section class="mb-8" data-purpose="section-header">
+    <section id="encabezado-vehiculos" class="mb-8" data-purpose="section-header">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <!-- Título y contador -->
         <div>
@@ -1432,6 +1432,8 @@ function aplicarRestriccionesRol() {
   $("btn-new-vehicle").classList.toggle("hidden", normal);
   $("vista-listado").classList.toggle("hidden", normal);
   $("view-switcher").classList.toggle("hidden", normal);   // contenedor de los conmutadores Lista/Cuadrícula
+  /* Solo administradores ven la pestaña de Solicitudes de Inspección (y su badge) */
+  $("nav-solicitudes").classList.toggle("hidden", normal);
   if (normal) cambiarVistaVehiculos("cuadricula");
 }
 
@@ -1987,13 +1989,21 @@ async function cargarSolicitudes() {
   renderSolicitudes();
 }
 
-/* Muestra la sección de solicitudes y oculta las demás vistas */
+/* Oculta TODAS las áreas de contenido (vehículos, ficha, mecánicos y solicitudes) antes de activar una sección.
+   Evita que el encabezado "Listado de Vehículos" quede superpuesto con otra vista. */
+function ocultarTodasLasVistas() {
+  ["view-vehicle-detail", "view-list", "view-grid", "view-mecanicos", "view-solicitudes", "encabezado-vehiculos"]
+    .forEach((id) => $(id).classList.add("hidden"));
+}
+
+/* Muestra la sección de solicitudes. Solo para administradores: el rol normal es redirigido a la cuadrícula. */
 function mostrarSeccionSolicitudes() {
+  if (!esAdmin()) {
+    mostrarSeccionVehiculos();   // acceso directo o por estado: redirige a la Vista Cuadrícula
+    return;
+  }
+  ocultarTodasLasVistas();
   $("view-app").classList.remove("hidden");
-  $("view-vehicle-detail").classList.add("hidden");
-  $("view-list").classList.add("hidden");
-  $("view-grid").classList.add("hidden");
-  $("view-mecanicos").classList.add("hidden");
   $("view-solicitudes").classList.remove("hidden");
   $("nav-solicitudes").classList.add("text-teal-600");
   $("nav-solicitudes").classList.remove("text-slate-500");
@@ -2207,11 +2217,10 @@ function cerrarModalAsignada() {
   cargarSolicitudes();
 }
 
-/* Muestra la sección Mecánicos y oculta las vistas de vehículos */
+/* Muestra la sección Mecánicos y oculta las demás vistas */
 function mostrarSeccionMecanicos() {
-  $("view-vehicle-detail").classList.add("hidden");
-  $("view-list").classList.add("hidden");
-  $("view-grid").classList.add("hidden");
+  ocultarTodasLasVistas();
+  $("view-app").classList.remove("hidden");
   $("view-mecanicos").classList.remove("hidden");
   $("nav-drivers").classList.add("text-teal-600");
   $("nav-drivers").classList.remove("text-slate-500");
@@ -2222,13 +2231,18 @@ function mostrarSeccionMecanicos() {
   cargarMecanicos();
 }
 
-/* Regresa a la sección de vehículos (listado o cuadrícula según la vista previa) */
+/* Regresa a la sección de vehículos (listado o cuadrícula según la vista previa).
+   Para el rol normal la vista siempre es la Cuadrícula. */
 function mostrarSeccionVehiculos() {
-  $("view-mecanicos").classList.add("hidden");
+  ocultarTodasLasVistas();
   $("nav-drivers").classList.remove("text-teal-600");
   $("nav-drivers").classList.add("text-slate-500");
+  $("nav-solicitudes").classList.remove("text-teal-600");
+  $("nav-solicitudes").classList.add("text-slate-500");
   marcarPestanaVehiculosActiva();
   $("view-app").classList.remove("hidden");
+  $("encabezado-vehiculos").classList.remove("hidden");
+  if (esNormal()) estado.vistaVehiculos = "cuadricula";
   aplicarLayoutVistas();
   estado.vista = "app";
 }
@@ -2243,9 +2257,16 @@ $("nav-solicitudes").addEventListener("click", (evento) => {
   evento.preventDefault();
   mostrarSeccionSolicitudes();
 });
+/* Acceso por URL (#solicitudes) o por hash: si es rol normal, se redirige a la Vista Cuadrícula */
+window.addEventListener("hashchange", () => {
+  if (window.location.hash === "#solicitudes" && estado.usuario) {
+    if (esNormal()) mostrarSeccionVehiculos();
+    else mostrarSeccionSolicitudes();
+  }
+});
 $("btn-cerrar-asignada").addEventListener("click", cerrarModalAsignada);
 $("nav-vehicles").querySelector("button").addEventListener("click", (evento) => {
-  if (estado.vista === "mecanicos") {
+  if (estado.vista === "mecanicos" || estado.vista === "solicitudes") {
     evento.preventDefault();
     mostrarSeccionVehiculos();
   }
