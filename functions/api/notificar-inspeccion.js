@@ -1,20 +1,26 @@
 /* POST /api/notificar-inspeccion -> envía el correo de solicitud de inspección a jokeys22@gmail.com.
    Body JSON: { codigo_hoja }. El vehículo y el código se leen de D1 (no se confía en el cliente).
-   Requiere los secretos de Pages: RESEND_API_KEY y EMAIL_FROM (remitente verificado en Resend). */
+   Secretos/variables de Pages:
+     - RESEND_API_KEY (secreto, obligatorio para enviar).
+     - EMAIL_FROM (opcional). Si no existe se usa "Mantenimiento CISA <onboarding@resend.dev>".
+   Errores del proveedor (remitente no permitido, API caída, sin clave, etc.) NO rompen la
+   experiencia: se responden con 200 y { enviado: false, motivo }, porque la inspección ya quedó registrada en D1. */
 import { respuestaJson, respuestaError, respuestaOpciones } from "../_shared/vehiculos.js";
 
 const DESTINATARIO = "jokeys22@gmail.com";
+const REMITENTE_POR_DEFECTO = "Mantenimiento CISA <onboarding@resend.dev>";
 const URL_PLATAFORMA = "https://mantenimiento.ciudad-futura.com/";
 
 export async function onRequestOptions() {
   return respuestaOpciones();
 }
 
-export async function onRequestPost({ request, env }) {
-  if (!env.RESEND_API_KEY || !env.EMAIL_FROM) {
-    return respuestaError("Servicio de correo no configurado (RESEND_API_KEY / EMAIL_FROM)", 503);
-  }
+/* Respuesta no bloqueante: el cliente sigue su flujo y muestra el motivo como aviso */
+function correoNoEnviado(codigoHoja, motivo) {
+  return respuestaJson({ enviado: false, codigo_hoja: codigoHoja, motivo: motivo });
+}
 
+export async function onRequestPost({ request, env }) {
   let cuerpo;
   try {
     cuerpo = await request.json();
@@ -40,12 +46,18 @@ export async function onRequestPost({ request, env }) {
     return respuestaError("Error al leer la inspección: " + error.message, 500);
   }
 
+  const codigoHojaRegistrado = inspeccion.codigo_hoja;
+  if (!env.RESEND_API_KEY) {
+    return correoNoEnviado(codigoHojaRegistrado, "Falta configurar RESEND_API_KEY en el proyecto");
+  }
+
   const idVehiculo = vehiculo ? vehiculo.id : inspeccion.vehiculo_id;
   const nombreVehiculo = vehiculo && vehiculo.nombre ? vehiculo.nombre : "Vehículo " + idVehiculo;
   const texto =
     "El departamento de logística solicita la inspección del vehículo " + idVehiculo + " - " + nombreVehiculo + ".\n" +
     "Ingresa a la siguiente dirección para poder acceder a la plataforma de mantenimiento para revisar esta solicitud de inspección de vehículo liviano: " +
     URL_PLATAFORMA;
+  const remitente = env.EMAIL_FROM || REMITENTE_POR_DEFECTO;
 
   try {
     const respuesta = await fetch("https://api.resend.com/emails", {
@@ -55,18 +67,19 @@ export async function onRequestPost({ request, env }) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        from: env.EMAIL_FROM,
+        from: remitente,
         to: [DESTINATARIO],
-        subject: inspeccion.codigo_hoja,
+        subject: codigoHojaRegistrado,
         text: texto
       })
     });
     const datos = await respuesta.json().catch(() => null);
     if (!respuesta.ok) {
-      return respuestaError("El proveedor de correo rechazó el envío: " + ((datos && datos.message) || respuesta.status), 502);
+      const detalle = (datos && (datos.message || datos.name)) || ("HTTP " + respuesta.status);
+      return correoNoEnviado(codigoHojaRegistrado, "Resend rechazó el envío: " + detalle);
     }
-    return respuestaJson({ enviado: true, id: datos && datos.id, codigo_hoja: inspeccion.codigo_hoja });
+    return respuestaJson({ enviado: true, id: datos && datos.id, codigo_hoja: codigoHojaRegistrado });
   } catch (error) {
-    return respuestaError("No se pudo contactar el servicio de correo: " + error.message, 502);
+    return correoNoEnviado(codigoHojaRegistrado, "No se pudo contactar Resend: " + error.message);
   }
 }

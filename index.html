@@ -880,11 +880,11 @@ async function confirmarEnvioInspeccion() {
     /* La solicitud ya quedó registrada en D1: se cierran los modales en cualquier caso */
     cerrarModal("modal-advertencia-tiempo");
     cerrarModal("modal-solicitud-inspeccion");
-    if (aviso.ok) {
+    if (aviso.ok && resultado && resultado.enviado) {
       mostrarToast("Solicitud de inspección enviada correctamente", "ok");
     } else {
-      mostrarToast("Solicitud " + datos.codigo_hoja + " registrada, pero el correo no se envió: " +
-        ((resultado && resultado.error) || aviso.status), "alerta");
+      const motivo = (resultado && (resultado.motivo || resultado.error)) || ("HTTP " + aviso.status);
+      mostrarToast("Solicitud " + datos.codigo_hoja + " registrada, pero el correo no se envió: " + motivo, "alerta");
     }
   } catch (error) {
     mostrarToast(error.message, "error");
