@@ -1442,7 +1442,7 @@ function crearAccionInspeccion(vehiculo) {
     const boton = document.createElement("button");
     boton.type = "button";
     boton.className = "inline-flex items-center gap-1.5 border border-teal-600 text-teal-700 hover:bg-teal-50 text-xs py-1.5 px-3 rounded-lg font-medium transition-colors";
-    boton.textContent = "Enviar a inspección antes de viaje";
+    boton.textContent = "Enviar a inspección";
     boton.addEventListener("click", () => abrirModalSolicitud(vehiculo));
     return boton;
   }
