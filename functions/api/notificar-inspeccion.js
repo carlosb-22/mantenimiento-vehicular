@@ -1,4 +1,4 @@
-/* POST /api/notificar-inspeccion -> envía el correo de solicitud de inspección a jokeys22@gmail.com.
+/* POST /api/notificar-inspeccion -> envía el correo de solicitud de inspección a los destinatarios de DESTINATARIOS.
    Body JSON: { codigo_hoja }. El vehículo y el código se leen de D1 (no se confía en el cliente).
    Secretos/variables de Pages:
      - RESEND_API_KEY (secreto, obligatorio para enviar).
@@ -7,7 +7,12 @@
    experiencia: se responden con 200 y { enviado: false, motivo }, porque la inspección ya quedó registrada en D1. */
 import { respuestaJson, respuestaError, respuestaOpciones } from "../_shared/vehiculos.js";
 
-const DESTINATARIO = "jokeys22@gmail.com";
+/* Resend acepta un arreglo en "to": el correo se despacha a todas las direcciones en una sola llamada */
+const DESTINATARIOS = [
+  "jokeys22@gmail.com",
+  "yoana.pereira@flxgrp.com",
+  "fernando.oyuela@flxgrp.com"
+];
 const REMITENTE_POR_DEFECTO = "Mantenimiento CISA <onboarding@resend.dev>";
 const URL_PLATAFORMA = "https://mantenimiento.ciudad-futura.com/";
 
@@ -68,7 +73,7 @@ export async function onRequestPost({ request, env }) {
       },
       body: JSON.stringify({
         from: remitente,
-        to: [DESTINATARIO],
+        to: DESTINATARIOS,
         subject: codigoHojaRegistrado,
         text: texto
       })
