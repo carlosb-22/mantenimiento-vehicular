@@ -88,13 +88,24 @@
     </div>
     <!-- Derecha: Perfil de usuario (nombre dinámico).
          NOTA: se eliminó el ícono de flecha hacia abajo que estaba junto al nombre. -->
-    <div class="flex items-center space-x-3 cursor-pointer group">
-      <span id="user-display-name" class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">—</span>
-      <div class="relative">
-        <div class="w-9 h-9 rounded-full bg-slate-200 border-2 border-slate-100 flex items-center justify-center overflow-hidden">
-          <span id="user-avatar-initials" class="text-xs font-semibold text-slate-600">—</span>
+    <!-- Perfil interactivo: al pulsarlo se despliega el menú de usuario (Cerrar sesión) -->
+    <div id="menu-usuario" class="relative">
+      <button id="btn-perfil-usuario" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="dropdown-usuario"
+        class="flex items-center space-x-3 cursor-pointer group rounded-lg px-2 py-1 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500">
+        <span id="user-display-name" class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">—</span>
+        <div class="relative">
+          <div class="w-9 h-9 rounded-full bg-slate-200 border-2 border-slate-100 flex items-center justify-center overflow-hidden">
+            <span id="user-avatar-initials" class="text-xs font-semibold text-slate-600">—</span>
+          </div>
+          <div class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></div>
         </div>
-        <div class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></div>
+      </button>
+      <div id="dropdown-usuario" role="menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg border border-slate-200 shadow-lg py-1 z-40">
+        <button id="btn-cerrar-sesion" type="button" role="menuitem"
+          class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-rose-50 hover:text-rose-700 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          Cerrar sesión
+        </button>
       </div>
     </div>
   </div>
@@ -918,6 +929,51 @@ async function handleLogin() {
   iniciarSesion(usuario);
 }
 
+/* ------------------------- Menú de perfil y cierre de sesión ------------------------- */
+function alternarMenuUsuario(forzarCierre) {
+  const dropdown = $("dropdown-usuario");
+  const abrir = forzarCierre ? false : dropdown.classList.contains("hidden");
+  dropdown.classList.toggle("hidden", !abrir);
+  $("btn-perfil-usuario").setAttribute("aria-expanded", abrir ? "true" : "false");
+}
+
+/* Cierra la sesión: limpia el estado en memoria, oculta la plataforma y vuelve al ingreso por PIN.
+   La app no guarda sesión en sessionStorage/localStorage: la sesión vive solo en `estado`. */
+function cerrarSesion() {
+  alternarMenuUsuario(true);
+  cerrarModal("modal-solicitud-inspeccion");
+  cerrarModal("modal-advertencia-tiempo");
+
+  /* Estado de la sesión */
+  estado.usuario = null;
+  estado.vista = "login";
+  estado.vehiculoFicha = null;
+  estado.filtroEstado = "todos";
+  estado.vistaVehiculos = "listado";
+  estado.vistaListado = "listado";
+  estado.guardandoEstado = false;
+  solicitudInspeccion.vehiculo = null;
+  solicitudInspeccion.secuencia = null;
+  solicitudInspeccion.cargando = false;
+
+  /* Cabecera y vistas */
+  $("user-display-name").textContent = "—";
+  $("user-avatar-initials").textContent = "—";
+  $("main-header").classList.add("hidden");
+  $("view-app").classList.add("hidden");
+  $("view-vehicle-detail").classList.add("hidden");
+  $("view-list").classList.remove("hidden");
+  $("view-grid").classList.add("hidden");
+  $("search-input").value = "";
+  $("page-title").textContent = "Listado de Vehículos - Vista Listado";
+
+  /* Pantalla de ingreso con el PIN reiniciado */
+  $("view-login").classList.remove("hidden");
+  clearPin();
+  pinInput.focus();
+  mostrarFeedback("Sesión cerrada. Ingresa tu PIN para continuar.", "info");
+}
+
 function iniciarSesion(usuario) {
   estado.usuario = usuario;                       // usuario logueado en el estado
   estado.vista = "app";
@@ -1692,6 +1748,17 @@ function volverAlListado() {
 /* ----------------------------- Inicialización ---------------------------- */
 pinInput.addEventListener("input", updateDots);
 $("search-input").addEventListener("input", render);
+$("btn-perfil-usuario").addEventListener("click", (evento) => {
+  evento.stopPropagation();
+  alternarMenuUsuario();
+});
+$("btn-cerrar-sesion").addEventListener("click", cerrarSesion);
+document.addEventListener("click", (evento) => {
+  if (!$("menu-usuario").contains(evento.target)) alternarMenuUsuario(true);
+});
+document.addEventListener("keydown", (evento) => {
+  if (evento.key === "Escape") alternarMenuUsuario(true);
+});
 $("vista-listado").addEventListener("click", (evento) => {
   evento.preventDefault();
   cambiarVistaVehiculos("listado");
