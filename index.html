@@ -120,10 +120,10 @@
         <button aria-expanded="false" aria-haspopup="true" class="flex items-center space-x-1.5 focus:outline-none" type="button">
           <svg class="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 17H5a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v6a2 2 0 01-2 2h-3m-8 0v2a1 1 0 001 1h6a1 1 0 001-1v-2m-8 0h8M7 11h.01M17 11h.01M5 11l1.5-3.5A2 2 0 018.3 6h7.4a2 2 0 011.8 1.5L19 11" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
           <span class="font-medium">Vehículos</span>
-          <svg class="w-4 h-4 text-teal-500 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          <svg id="nav-vehicles-caret" class="w-4 h-4 text-teal-500 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
         </button>
         <span id="nav-vehicles-indicator" class="absolute bottom-0 left-0 right-0 h-0.5 bg-teal-500 rounded-full"></span>
-        <div class="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-30 transition-all opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto">
+        <div id="nav-vehicles-menu" class="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-30 transition-all opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto">
           <!-- Opción seleccionada por defecto: Vista Listado -->
           <a id="vista-listado" data-vista="listado" aria-current="page" class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-teal-700 bg-teal-50/60 hover:bg-teal-50" href="#listado">
             <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
@@ -1431,7 +1431,12 @@ function aplicarRestriccionesRol() {
   const normal = esNormal();
   $("btn-new-vehicle").classList.toggle("hidden", normal);
   $("vista-listado").classList.toggle("hidden", normal);
-  $("view-switcher").classList.toggle("hidden", normal);   // contenedor de los conmutadores Lista/Cuadrícula
+  /* Conmutadores Lista/Cuadrícula: "sm:inline-flex" anularía el "hidden" en escritorio, por eso se quita también */
+  $("view-switcher").classList.toggle("hidden", normal);
+  $("view-switcher").classList.toggle("sm:inline-flex", !normal);
+  /* Pestaña "Vehículos": para el rol normal es una pestaña simple, sin flecha ni desplegable */
+  $("nav-vehicles-caret").classList.toggle("hidden", normal);
+  $("nav-vehicles-menu").classList.toggle("hidden", normal);
   /* Solo administradores ven la pestaña de Solicitudes de Inspección (y su badge) */
   $("nav-solicitudes").classList.toggle("hidden", normal);
   if (normal) cambiarVistaVehiculos("cuadricula");
@@ -1505,8 +1510,9 @@ function marcarTogglesRapidos(vista) {
   });
 }
 
-/* Cambia entre Vista Listado y Vista Cuadrícula */
-function cambiarVistaVehiculos(vista) {
+/* Cambia entre Vista Listado y Vista Cuadrícula. El rol normal está fijado a la Cuadrícula. */
+function cambiarVistaVehiculos(vistaSolicitada) {
+  const vista = esNormal() ? "cuadricula" : vistaSolicitada;
   estado.vistaVehiculos = vista;
   estado.vistaListado = vista;
   $("page-title").textContent = vista === "cuadricula"
