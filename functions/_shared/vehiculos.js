@@ -164,6 +164,15 @@ export function obtenerFila(env, id) {
   return env.mantenimiento_db.prepare("SELECT * FROM vehiculos WHERE id = ?").bind(id).first();
 }
 
+/* Inspección activa = porcentaje IS NULL OR porcentaje < 100 (equivale al filtro SQL).
+   porcentaje se guarda como texto ("25%"), así que se convierte a número. Una 'asignada' con 0% sigue activa. */
+export function esInspeccionActiva(fila) {
+  const bruto = fila && fila.porcentaje;
+  if (bruto === null || bruto === undefined || String(bruto).trim() === "") return true;
+  const numero = Number(String(bruto).replace("%", "").trim());
+  return Number.isNaN(numero) ? true : numero < 100;
+}
+
 export function parsearId(valor) {
   const id = Number.parseInt(valor, 10);
   return Number.isInteger(id) && id > 0 ? id : null;

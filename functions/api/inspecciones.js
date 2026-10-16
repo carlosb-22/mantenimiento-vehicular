@@ -3,7 +3,7 @@
    La secuencia se calcula en el mismo INSERT (MAX + 1) para evitar duplicados.
    Valores por defecto: administrador='sin definir', id_mecanico='sin definir',
    estado_hoja='solicitada', porcentaje=NULL. */
-import { respuestaJson, respuestaError, respuestaOpciones, parsearId, obtenerFila } from "../_shared/vehiculos.js";
+import { respuestaJson, respuestaError, respuestaOpciones, parsearId, obtenerFila, esInspeccionActiva } from "../_shared/vehiculos.js";
 
 const UBICACIONES = ["E", "U", "T", "C"];
 
@@ -33,8 +33,14 @@ export async function onRequestGet({ env }) {
       ...fila,
       mecanico_nombre: fila.id_mecanico === "sin definir" ? null : (fila.mecanico_nombre || null)
     }));
-    const pendientes = solicitudes.filter((s) => s.estado_hoja === "solicitada").length;
-    return respuestaJson({ total: solicitudes.length, pendientes: pendientes, inspecciones: solicitudes });
+    /* Inspección activa: porcentaje NULL o < 100. El porcentaje se guarda como texto ("25%"), así que se convierte a número. */
+    const activas = solicitudes.filter((s) => esInspeccionActiva(s)).length;
+    return respuestaJson({
+      total: solicitudes.length,
+      activas: activas,
+      pendientes: activas,   // alias de compatibilidad: el badge del header usa "activas"
+      inspecciones: solicitudes
+    });
   } catch (error) {
     return respuestaError("Error al leer inspecciones: " + error.message, 500);
   }
