@@ -117,7 +117,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center space-x-12">
       <!-- Pestaña 1: Vehículos (activa) con menú desplegable -->
       <div id="nav-vehicles" class="relative group py-4 px-2 flex flex-col items-center text-teal-600 font-medium text-sm cursor-pointer">
-        <button aria-expanded="false" aria-haspopup="true" class="flex items-center space-x-1.5 focus:outline-none" type="button">
+        <button id="nav-vehicles-button" aria-expanded="false" aria-haspopup="true" class="flex items-center space-x-1.5 focus:outline-none" type="button">
           <svg class="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 17H5a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v6a2 2 0 01-2 2h-3m-8 0v2a1 1 0 001 1h6a1 1 0 001-1v-2m-8 0h8M7 11h.01M17 11h.01M5 11l1.5-3.5A2 2 0 018.3 6h7.4a2 2 0 011.8 1.5L19 11" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
           <span class="font-medium">Vehículos</span>
           <svg id="nav-vehicles-caret" class="w-4 h-4 text-teal-500 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
@@ -1434,9 +1434,20 @@ function aplicarRestriccionesRol() {
   /* Conmutadores Lista/Cuadrícula: "sm:inline-flex" anularía el "hidden" en escritorio, por eso se quita también */
   $("view-switcher").classList.toggle("hidden", normal);
   $("view-switcher").classList.toggle("sm:inline-flex", !normal);
-  /* Pestaña "Vehículos": para el rol normal es una pestaña simple, sin flecha ni desplegable */
+  /* Pestaña "Vehículos": para el rol normal es un botón simple. Se oculta la flecha y el menú,
+     se quita el comportamiento de submenú (grupo hover y atributos ARIA) y se deja de abrir por hover. */
   $("nav-vehicles-caret").classList.toggle("hidden", normal);
   $("nav-vehicles-menu").classList.toggle("hidden", normal);
+  $("nav-vehicles").classList.toggle("group", !normal);
+  $("nav-vehicles").classList.toggle("cursor-pointer", !normal);
+  $("nav-vehicles-button").classList.toggle("cursor-pointer", !normal);
+  if (normal) {
+    $("nav-vehicles-button").removeAttribute("aria-haspopup");
+    $("nav-vehicles-button").removeAttribute("aria-expanded");
+  } else {
+    $("nav-vehicles-button").setAttribute("aria-haspopup", "true");
+    $("nav-vehicles-button").setAttribute("aria-expanded", "false");
+  }
   /* Solo administradores ven la pestaña de Solicitudes de Inspección (y su badge) */
   $("nav-solicitudes").classList.toggle("hidden", normal);
   if (normal) cambiarVistaVehiculos("cuadricula");
@@ -2272,6 +2283,12 @@ window.addEventListener("hashchange", () => {
 });
 $("btn-cerrar-asignada").addEventListener("click", cerrarModalAsignada);
 $("nav-vehicles").querySelector("button").addEventListener("click", (evento) => {
+  /* Rol normal: el botón es una pestaña simple que activa directamente la Vista Cuadrícula */
+  if (esNormal()) {
+    evento.preventDefault();
+    mostrarSeccionVehiculos();
+    return;
+  }
   if (estado.vista === "mecanicos" || estado.vista === "solicitudes") {
     evento.preventDefault();
     mostrarSeccionVehiculos();
