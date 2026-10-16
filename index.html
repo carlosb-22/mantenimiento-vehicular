@@ -289,6 +289,45 @@
 </div>
 
 <!-- ============================================================
+     MODAL 1: Solicitud de inspección pre-viaje (generador de código)
+     ============================================================ -->
+<div id="modal-solicitud-inspeccion" class="hidden fixed inset-0 z-50 items-center justify-center bg-slate-900/50 p-4">
+  <div role="dialog" aria-modal="true" aria-labelledby="modal-solicitud-titulo" class="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200 p-6">
+    <h2 id="modal-solicitud-titulo" class="text-lg font-semibold text-slate-800">Vehículo en espera para ser enviado a inspección</h2>
+    <p id="modal-solicitud-subtitulo" class="mt-1 text-sm text-slate-500"></p>
+
+    <div class="mt-5 rounded-xl border border-teal-200 bg-teal-50/60 p-5 text-center">
+      <p class="text-[11px] uppercase tracking-wider font-semibold text-teal-700">Código de Hoja de Inspección</p>
+      <p id="modal-solicitud-codigo" class="mt-2 font-mono text-2xl sm:text-3xl font-bold tracking-wider text-teal-800 break-all">HI V VL …</p>
+    </div>
+
+    <div class="mt-5">
+      <label for="modal-solicitud-ubicacion" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Ubicación</label>
+      <select id="modal-solicitud-ubicacion" class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500"></select>
+    </div>
+
+    <div class="mt-6 flex items-center justify-end gap-2">
+      <button id="btn-cancelar-solicitud" type="button" class="px-4 py-2 text-sm font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">Cancelar</button>
+      <button id="btn-proceder-envio" type="button" class="px-4 py-2 text-sm font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 shadow-sm transition-colors">Proceder con envío</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL 2: Advertencia de tiempo mínimo (2 horas)
+     ============================================================ -->
+<div id="modal-advertencia-tiempo" class="hidden fixed inset-0 z-[60] items-center justify-center bg-slate-900/50 p-4">
+  <div role="dialog" aria-modal="true" aria-labelledby="modal-advertencia-titulo" class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-6">
+    <h2 id="modal-advertencia-titulo" class="text-lg font-semibold text-slate-800">Aviso importante</h2>
+    <p class="mt-3 text-sm text-slate-600">Tome en cuenta que la inspección liviana tiene un tiempo mínimo de 2 horas para completarse.</p>
+    <div class="mt-6 flex items-center justify-end gap-2">
+      <button id="btn-cancelar-tiempo" type="button" class="px-4 py-2 text-sm font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">Cancelar</button>
+      <button id="btn-aceptar-tiempo" type="button" class="px-4 py-2 text-sm font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 shadow-sm transition-colors disabled:opacity-60">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
      VISTA 3: FICHA TÉCNICA DEL VEHÍCULO (estructura de base_ficha.html)
      ============================================================ -->
 <section id="view-vehicle-detail" class="hidden flex-1 flex flex-col">
@@ -736,6 +775,125 @@ function mostrarFeedback(mensaje, tipo) {
 }
 
 /* Validación del PIN contra la lista hardcodeada */
+/* ----------------- Solicitud de inspección pre-viaje (Modales) ----------- */
+const UBICACIONES_INSPECCION = [
+  { letra: "E", nombre: "La Esperanza" },
+  { letra: "U", nombre: "Útila" },
+  { letra: "T", nombre: "Tegucigalpa" },
+  { letra: "C", nombre: "Carretera" }
+];
+const URL_SECUENCIA_INSPECCION = "/api/inspecciones/siguiente-secuencia";
+const URL_INSPECCIONES = "/api/inspecciones";
+const URL_NOTIFICAR_INSPECCION = "/api/notificar-inspeccion";
+
+const solicitudInspeccion = { vehiculo: null, secuencia: null, cargando: false };
+
+function nombresAdministradores() {
+  return USUARIOS.filter((u) => u.rol === "admin").map((u) => u.nombre);
+}
+
+/* Código HI V VL [Ubicación] [ID 3 dígitos] [Secuencia 7 dígitos] */
+function construirCodigoInspeccion(ubicacion, idVehiculo, secuencia) {
+  const id = String(idVehiculo).padStart(3, "0");
+  const sec = String(secuencia).padStart(7, "0");
+  return "HI V VL " + ubicacion + " " + id + " " + sec;
+}
+
+function actualizarCodigoModal() {
+  const ubicacion = $("modal-solicitud-ubicacion").value;
+  const prefijo = "HI V VL " + ubicacion + " " + String(solicitudInspeccion.vehiculo.id).padStart(3, "0") + " ";
+  $("modal-solicitud-codigo").textContent = solicitudInspeccion.secuencia === null
+    ? prefijo + "…"
+    : construirCodigoInspeccion(ubicacion, solicitudInspeccion.vehiculo.id, solicitudInspeccion.secuencia);
+}
+
+function cerrarModal(idModal) {
+  $(idModal).classList.add("hidden");
+  $(idModal).classList.remove("flex");
+}
+
+function abrirModalAdvertencia() {
+  $("modal-advertencia-tiempo").classList.remove("hidden");
+  $("modal-advertencia-tiempo").classList.add("flex");
+}
+
+/* Modal 1: subtítulo con admins, selector de ubicación, código en vivo y secuencia desde la API */
+async function abrirModalSolicitud(vehiculo) {
+  solicitudInspeccion.vehiculo = vehiculo;
+  solicitudInspeccion.secuencia = null;
+  const admins = nombresAdministradores();
+  $("modal-solicitud-subtitulo").textContent = admins.length
+    ? admins.join(" y ") + " van a encargarse de asignar este vehículo a un mecánico."
+    : "Un administrador va a encargarse de asignar este vehículo a un mecánico.";
+  const selector = $("modal-solicitud-ubicacion");
+  selector.innerHTML = "";
+  UBICACIONES_INSPECCION.forEach((u) => {
+    const opcion = document.createElement("option");
+    opcion.value = u.letra;
+    opcion.textContent = u.letra + " — " + u.nombre;
+    selector.append(opcion);
+  });
+  selector.value = "E";
+  actualizarCodigoModal();
+  $("modal-solicitud-inspeccion").classList.remove("hidden");
+  $("modal-solicitud-inspeccion").classList.add("flex");
+  try {
+    const respuesta = await fetch(URL_SECUENCIA_INSPECCION, { cache: "no-store" });
+    if (!respuesta.ok) throw new Error("HTTP " + respuesta.status);
+    const datos = await respuesta.json();
+    solicitudInspeccion.secuencia = datos.secuencia;
+    actualizarCodigoModal();
+  } catch (error) {
+    mostrarToast("No se pudo obtener la secuencia de inspección: " + error.message, "error");
+    cerrarModal("modal-solicitud-inspeccion");
+  }
+}
+
+/* Modal 2: aviso de 2 horas y envío (registro en D1 + notificación por correo) */
+async function confirmarEnvioInspeccion() {
+  if (solicitudInspeccion.cargando || !solicitudInspeccion.vehiculo) return;
+  solicitudInspeccion.cargando = true;
+  $("btn-aceptar-tiempo").disabled = true;
+  try {
+    const ubicacion = $("modal-solicitud-ubicacion").value;
+    const registro = await fetch(URL_INSPECCIONES, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        vehiculo_id: solicitudInspeccion.vehiculo.id,
+        ubicacion: ubicacion,
+        usuario_solicitante: estado.usuario ? estado.usuario.nombre : ""
+      }),
+      cache: "no-store"
+    });
+    const datos = await registro.json().catch(() => null);
+    if (registro.status !== 201) throw new Error((datos && datos.error) || ("HTTP " + registro.status));
+
+    const aviso = await fetch(URL_NOTIFICAR_INSPECCION, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ codigo_hoja: datos.codigo_hoja }),
+      cache: "no-store"
+    });
+    const resultado = await aviso.json().catch(() => null);
+
+    /* La solicitud ya quedó registrada en D1: se cierran los modales en cualquier caso */
+    cerrarModal("modal-advertencia-tiempo");
+    cerrarModal("modal-solicitud-inspeccion");
+    if (aviso.ok) {
+      mostrarToast("Solicitud de inspección enviada correctamente", "ok");
+    } else {
+      mostrarToast("Solicitud " + datos.codigo_hoja + " registrada, pero el correo no se envió: " +
+        ((resultado && resultado.error) || aviso.status), "alerta");
+    }
+  } catch (error) {
+    mostrarToast(error.message, "error");
+  } finally {
+    solicitudInspeccion.cargando = false;
+    $("btn-aceptar-tiempo").disabled = false;
+  }
+}
+
 async function handleLogin() {
   const pin = pinInput.value.trim();
   if (!pin || pin.length < 4) {
@@ -769,6 +927,7 @@ function iniciarSesion(usuario) {
   marcarPestanaVehiculosActiva();
   $("view-login").classList.add("hidden");
   $("view-app").classList.remove("hidden");
+  aplicarRestriccionesRol();
   cargarVehiculos();
 }
 
@@ -924,7 +1083,9 @@ function crearTarjeta(vehiculo) {
   btnEditar.title = "Editar";
   btnEditar.className = "p-1.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors";
   btnEditar.append(crearSvgIcono("M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z", "w-4 h-4", "2"));
-  acciones.append(btnFicha, btnEditar);
+  /* Rol "normal": sin botones de edición (lápiz) */
+  acciones.append(btnFicha);
+  if (!esNormal()) acciones.append(btnEditar);
 
   contenedor.append(identidad, detalles, acciones);
   tarjeta.append(contenedor);
@@ -993,12 +1154,17 @@ function crearTarjetaCuadricula(vehiculo) {
   const placa = document.createElement("span");
   placa.className = "bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 font-medium";
   placa.textContent = vehiculo.placa || "—";
-  const btnFicha = document.createElement("button");
-  btnFicha.type = "button";
-  btnFicha.className = "border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors";
-  btnFicha.textContent = "Ver Ficha";   // abre la ficha técnica del vehículo
-  btnFicha.addEventListener("click", () => abrirFicha(vehiculo.id));
-  pie.append(placa, btnFicha);
+  /* Rol "normal": sin "Ver Ficha". En su lugar, inspección pre-viaje o icono de advertencia */
+  if (esNormal()) {
+    pie.append(placa, crearAccionInspeccion(vehiculo));
+  } else {
+    const btnFicha = document.createElement("button");
+    btnFicha.type = "button";
+    btnFicha.className = "border border-slate-200 hover:border-teal-600 hover:text-teal-700 text-slate-600 text-xs py-1.5 px-3 rounded-lg text-center font-medium transition-colors";
+    btnFicha.textContent = "Ver Ficha";   // abre la ficha técnica del vehículo
+    btnFicha.addEventListener("click", () => abrirFicha(vehiculo.id));
+    pie.append(placa, btnFicha);
+  }
 
   cuerpo.append(bloqueNombre, pie);
   tarjeta.append(cuerpo);
@@ -1014,6 +1180,39 @@ function crearReservaFotoCuadricula() {
 }
 
 /* Píldoras de filtro por estado con contadores dinámicos */
+/* ------------------- Rol "normal" (Ana Navarro): acceso restringido ------- */
+function esNormal() {
+  return Boolean(estado.usuario && estado.usuario.rol === "normal");
+}
+
+/* Ajusta la interfaz según el rol: solo Vista Cuadrícula, sin "Nuevo Vehículo" ni conmutadores */
+function aplicarRestriccionesRol() {
+  const normal = esNormal();
+  $("btn-new-vehicle").classList.toggle("hidden", normal);
+  $("vista-listado").classList.toggle("hidden", normal);
+  $("view-switcher").classList.toggle("hidden", normal);   // contenedor de los conmutadores Lista/Cuadrícula
+  if (normal) cambiarVistaVehiculos("cuadricula");
+}
+
+/* Botón (estado Apto / Con observaciones) o icono de advertencia (No Apto / En Mantenimiento) */
+function crearAccionInspeccion(vehiculo) {
+  const clave = claveDeEstado(vehiculo["estado-vehicular"]);
+  if (clave === "apto" || clave === "obs") {
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "inline-flex items-center gap-1.5 border border-teal-600 text-teal-700 hover:bg-teal-50 text-xs py-1.5 px-3 rounded-lg font-medium transition-colors";
+    boton.textContent = "Enviar a inspección antes de viaje";
+    boton.addEventListener("click", () => abrirModalSolicitud(vehiculo));
+    return boton;
+  }
+  const alerta = document.createElement("span");
+  alerta.className = "inline-flex items-center justify-center w-8 h-8 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 cursor-not-allowed";
+  alerta.title = "No disponible para inspección: el vehículo no está apto para el servicio";
+  alerta.setAttribute("aria-disabled", "true");
+  alerta.append(crearSvgIcono("M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z", "w-4 h-4", "2"));
+  return alerta;
+}
+
 function renderPildorasFiltro() {
   const contenedor = $("status-filters-container");
   contenedor.innerHTML = "";
@@ -1517,6 +1716,14 @@ SELECTOR_ESTADO_FICHA.forEach(([id, claveBoton]) => {
   });
 });
 $("btn-guardar-nota").addEventListener("click", guardarNota);
+$("modal-solicitud-ubicacion").addEventListener("change", actualizarCodigoModal);
+$("btn-proceder-envio").addEventListener("click", () => {
+  cerrarModal("modal-solicitud-inspeccion");
+  abrirModalAdvertencia();
+});
+$("btn-cancelar-solicitud").addEventListener("click", () => cerrarModal("modal-solicitud-inspeccion"));
+$("btn-aceptar-tiempo").addEventListener("click", confirmarEnvioInspeccion);
+$("btn-cancelar-tiempo").addEventListener("click", () => cerrarModal("modal-advertencia-tiempo"));
 $("detail-vehicle-photo").addEventListener("error", () => {
   $("detail-vehicle-photo").src = FOTO_PLACEHOLDER;
 });
