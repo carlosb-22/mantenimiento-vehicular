@@ -363,10 +363,10 @@
                     </span>
                     <span class="text-[10px] text-amber-700/80 font-medium">Requerido para este estado</span>
                   </div>
-                  <textarea rows="2" class="w-full text-xs text-slate-700 bg-white border border-amber-200 rounded-md p-2 focus:ring-1 focus:ring-amber-500 focus:outline-none placeholder:text-slate-400" placeholder="Detalle de las observaciones técnicas o mecánicas detectadas..."></textarea>
+                  <textarea id="status-observaciones-texto" rows="2" class="w-full text-xs text-slate-700 bg-white border border-amber-200 rounded-md p-2 focus:ring-1 focus:ring-amber-500 focus:outline-none placeholder:text-slate-400" placeholder="Detalle de las observaciones técnicas o mecánicas detectadas..."></textarea>
                   <div class="flex items-center justify-between mt-0.5">
                     <span class="text-[10px] text-slate-400">Se registrarán con firma del inspector activo</span>
-                    <button type="button" class="text-[11px] font-semibold text-amber-700 hover:text-amber-800 flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-200 transition-colors">
+                    <button id="btn-guardar-nota" type="button" class="text-[11px] font-semibold text-amber-700 hover:text-amber-800 flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-200 transition-colors">
                       <span class="material-symbols-outlined text-[13px]">save</span> Guardar nota
                     </button>
                   </div>
@@ -536,6 +536,9 @@
 
 /* ------------------------------ Configuración ---------------------------- */
 const URL_API_VEHICULOS = "/api/vehiculos";   // API (Pages Functions) sobre la base D1 "mantenimiento-db"
+/* Token Bearer para PUT. NO se guarda en el repositorio: cualquier valor incluido aquí
+   sería visible para todos los visitantes de la página. Vacío = guardado deshabilitado. */
+const API_TOKEN = "";
 const BASE_FOTOS = "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/vehiculos/";
 const LOGIN_DELAY_MS = 500;                       // pequeña espera de "verificación"
 const CAMPOS_BUSQUEDA = ["nombre", "placa", "modelo"];
@@ -556,6 +559,7 @@ const USUARIOS = [
 const estado = {
   vista: "login",            // 'login' | 'app' | 'ficha'
   usuario: null,             // usuario logueado: { nombre, pin, rol }
+  guardandoEstado: false,    // evita PUT duplicados desde la Ficha
   vehiculos: [],             // datos obtenidos de la API /api/vehiculos (D1)
   cargando: false,
   datosCargados: false,
@@ -920,6 +924,8 @@ function crearTarjeta(vehiculo) {
     "font-medium text-amber-600 block"
   ));
 
+  detalles.append(datoDetalle("ODÓMETRO", textoOdometro(vehiculo.id), "w-32"));
+
   /* --- Acciones: Ver Ficha y Editar (visibles, sin funcionalidad por ahora) --- */
   const acciones = document.createElement("div");
   acciones.className = "flex items-center justify-end gap-2 shrink-0 pt-2 lg:pt-0";
@@ -992,7 +998,10 @@ function crearTarjetaCuadricula(vehiculo) {
   const h3 = document.createElement("h3");
   h3.className = "text-base font-semibold text-slate-900 line-clamp-1 mt-0.5";
   h3.textContent = vehiculo.nombre || "Vehículo " + (vehiculo.id ?? "");
-  bloqueNombre.append(categoria, h3);
+  const lineaOdometro = document.createElement("span");
+  lineaOdometro.className = "block text-xs font-mono text-slate-500 mt-0.5";
+  lineaOdometro.textContent = "Odómetro: " + textoOdometro(vehiculo.id);
+  bloqueNombre.append(categoria, h3, lineaOdometro);
 
   const pie = document.createElement("div");
   pie.className = "flex items-center justify-between pt-2 border-t border-slate-100";
@@ -1176,7 +1185,7 @@ function render() {
    Respuesta: { success, message, data: { unidades: [ { nombre, clase,
    categoria, kilometraje, fecha } ] } }. "clase" puede traer ceros a la
    izquierda ("065") y se normaliza con parseInt para cruzarla con el "id". */
-const URL_KILOMETRAJES = "http://logistica.arrayanhn.com:3004/api/public/kilometrajes-actuales";
+const URL_KILOMETRAJES = "/api/kilometrajes";   // proxy same-origin (Pages Function) hacia el API externo
 const FORMATO_KM = new Intl.NumberFormat("es-HN");
 
 function normalizarId(valor) {
@@ -1214,6 +1223,8 @@ async function cargarKilometrajes(forzar = false) {
     estado.kilometrajes.error = String(error && error.message ? error.message : error);
   }
   estado.kilometrajes.cargando = false;
+
+  if (estado.datosCargados) render();   // refresca el odómetro de las tarjetas
 
   /* Si la ficha está abierta, refresca el odómetro con lo recién cargado */
   if (estado.vista === "ficha" && estado.vehiculoFicha !== null && estado.vehiculoFicha !== undefined) {
@@ -1327,8 +1338,145 @@ function renderizarFicha(vehiculo) {
   });
   /* Odómetro desde el API externo de kilometrajes (N/A si no hay dato) */
   $("detail-odometer").textContent = textoOdometro(vehiculo.id);
+  $("status-observaciones-texto").value = vehiculo.observaciones || "";
+  $("status-observaciones-texto").readOnly = !esAdmin();
   sincronizarSelectorEstado(claveSelectorFicha(vehiculo["estado-vehicular"]));
   establecerAcordeonesFicha(1);
+}
+
+/* ----------- Edición de estado y observaciones (solo rol admin) ----------- */
+const ESTADO_POR_CLAVE = {
+  apto: "Apto",
+  "no-apto": "No Apto",
+  observaciones: "Apto con observaciones",
+  mantenimiento: "En Mantenimiento"
+};
+const MSG_PERMISO_DENEGADO = "Permiso denegado: Solo los administradores pueden cambiar el estado del vehículo.";
+
+function esAdmin() {
+  return Boolean(estado.usuario && estado.usuario.rol === "admin");
+}
+
+/* Notificación temporal (toast) en la esquina inferior derecha */
+function mostrarToast(mensaje, tipo) {
+  const colores = { ok: "bg-emerald-600", error: "bg-rose-600", alerta: "bg-amber-500" };
+  const toast = document.createElement("div");
+  toast.setAttribute("role", tipo === "error" ? "alert" : "status");
+  toast.className = "fixed bottom-5 right-5 z-50 max-w-sm px-4 py-3 rounded-lg shadow-lg text-sm font-medium text-white transition-opacity duration-300 " +
+    (colores[tipo] || "bg-slate-800");
+  toast.textContent = mensaje;
+  document.body.append(toast);
+  setTimeout(() => {
+    toast.classList.add("opacity-0");
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+/* Bloquea los controles de estado mientras hay una petición en curso */
+function bloquearControlesEstado(bloqueado) {
+  SELECTOR_ESTADO_FICHA.forEach(([id]) => { $(id).disabled = bloqueado; });
+  $("btn-guardar-nota").disabled = bloqueado;
+}
+
+/* PUT /api/vehiculos/:id con Authorization: Bearer <API_TOKEN>.
+   La API acepta los nombres de campo de la SPA (p. ej. "estado-vehicular"). */
+async function actualizarVehiculo(idVehiculo, cambios) {
+  if (!API_TOKEN) throw new Error("token de API no configurado en la aplicación");
+  const respuesta = await fetch(URL_API_VEHICULOS + "/" + encodeURIComponent(idVehiculo), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + API_TOKEN },
+    body: JSON.stringify(cambios),
+    cache: "no-store"
+  });
+  const datos = await respuesta.json().catch(() => null);
+  if (respuesta.status !== 200) {
+    throw new Error((datos && datos.error) || ("HTTP " + respuesta.status));
+  }
+  return datos;
+}
+
+/* Reemplaza el registro local por la versión confirmada por la API y refresca las vistas */
+function aplicarVehiculoActualizado(actualizado) {
+  const indice = estado.vehiculos.findIndex((v) => String(v.id) === String(actualizado.id));
+  if (indice !== -1) estado.vehiculos[indice] = actualizado;
+  renderizarFicha(actualizado);
+  render();
+}
+
+function vehiculoFichaActual() {
+  return estado.vehiculos.find((v) => String(v.id) === String(estado.vehiculoFicha)) || null;
+}
+
+/* Clic en un botón del selector de estado de la Ficha Técnica */
+async function solicitarCambioEstado(clave) {
+  if (!estado.usuario) return;
+  if (!esAdmin()) {
+    mostrarToast(MSG_PERMISO_DENEGADO, "error");
+    return;   // rol "normal": sin petición de cambio
+  }
+  if (estado.guardandoEstado) return;
+  const vehiculo = vehiculoFichaActual();
+  if (!vehiculo) return;
+  if (clave === claveSelectorFicha(vehiculo["estado-vehicular"])) return;
+
+  const nota = $("status-observaciones-texto").value.trim();
+  if (clave === "observaciones" && !nota) {
+    const contenedorNota = $("status-observaciones-container");
+    contenedorNota.classList.remove("hidden");
+    contenedorNota.classList.add("flex");
+    $("status-observaciones-texto").focus();
+    mostrarToast("Escribe las observaciones técnicas y vuelve a seleccionar \"Con Observaciones\".", "alerta");
+    return;
+  }
+
+  estado.guardandoEstado = true;
+  bloquearControlesEstado(true);
+  try {
+    const actualizado = await actualizarVehiculo(vehiculo.id, {
+      "estado-vehicular": ESTADO_POR_CLAVE[clave],
+      observaciones: clave === "observaciones" ? nota : (vehiculo.observaciones || null)
+    });
+    aplicarVehiculoActualizado(actualizado);
+    mostrarToast("Estado actualizado correctamente", "ok");
+  } catch (error) {
+    mostrarToast("No se pudo actualizar el estado: " + error.message, "error");
+  } finally {
+    estado.guardandoEstado = false;
+    bloquearControlesEstado(false);
+  }
+}
+
+/* Botón "Guardar nota": guarda sólo las observaciones conservando el estado actual */
+async function guardarNota() {
+  if (!estado.usuario) return;
+  if (!esAdmin()) {
+    mostrarToast(MSG_PERMISO_DENEGADO, "error");
+    return;
+  }
+  if (estado.guardandoEstado) return;
+  const vehiculo = vehiculoFichaActual();
+  if (!vehiculo) return;
+  const nota = $("status-observaciones-texto").value.trim();
+  if (!nota) {
+    mostrarToast("La observación no puede estar vacía.", "alerta");
+    return;
+  }
+
+  estado.guardandoEstado = true;
+  bloquearControlesEstado(true);
+  try {
+    const actualizado = await actualizarVehiculo(vehiculo.id, {
+      "estado-vehicular": vehiculo["estado-vehicular"],
+      observaciones: nota
+    });
+    aplicarVehiculoActualizado(actualizado);
+    mostrarToast("Observaciones guardadas correctamente", "ok");
+  } catch (error) {
+    mostrarToast("No se pudieron guardar las observaciones: " + error.message, "error");
+  } finally {
+    estado.guardandoEstado = false;
+    bloquearControlesEstado(false);
+  }
 }
 
 function abrirFicha(idVehiculo) {
@@ -1371,7 +1519,7 @@ $("btn-back-to-list").addEventListener("click", (evento) => {
   volverAlListado();
 });
 SELECTOR_ESTADO_FICHA.forEach(([id, claveBoton]) => {
-  $(id).addEventListener("click", () => sincronizarSelectorEstado(claveBoton));
+  $(id).addEventListener("click", () => solicitarCambioEstado(claveBoton));
 });
 ["1", "2", "3", "4"].forEach((numero) => {
   $("ficha-acordeon-" + numero).addEventListener("click", () => {
@@ -1379,6 +1527,7 @@ SELECTOR_ESTADO_FICHA.forEach(([id, claveBoton]) => {
     establecerAcordeonesFicha(expandido ? null : numero);
   });
 });
+$("btn-guardar-nota").addEventListener("click", guardarNota);
 $("detail-vehicle-photo").addEventListener("error", () => {
   $("detail-vehicle-photo").src = FOTO_PLACEHOLDER;
 });
