@@ -137,15 +137,15 @@
           </a>
         </div>
       </div>
-      <!-- Pestaña 2: Choferes (inactiva) -->
-      <a id="nav-drivers" class="relative py-4 px-2 flex flex-col items-center group text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors" href="#choferes">
+      <!-- Pestaña 2: Mecánicos (inactiva) -->
+      <a id="nav-drivers" class="relative py-4 px-2 flex flex-col items-center group text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors" href="#mecanicos">
         <div class="flex items-center space-x-2 mb-1">
           <svg class="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="9" stroke-width="1.8"></circle>
             <circle cx="12" cy="12" r="3" stroke-width="1.8"></circle>
             <path d="M12 3v6M12 15v6M3 12h6M15 12h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
           </svg>
-          <span>Choferes</span>
+          <span>Mecánicos</span>
         </div>
       </a>
     </div>
@@ -295,6 +295,28 @@
     <div id="view-grid" class="hidden">
       <div id="status-filters-container" class="mt-5 flex items-center gap-2 overflow-x-auto pb-1" data-purpose="status-filters"></div>
       <section id="vehicles-grid-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" data-purpose="vehicles-grid"></section>
+    </div>
+
+    <!-- Área de contenido: SECCIÓN MECÁNICOS (pestaña "Mecánicos") -->
+    <div id="view-mecanicos" class="hidden">
+      <section class="mb-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-3">
+              <h1 class="text-2xl font-bold tracking-tight text-slate-800">Listado de Mecánicos</h1>
+              <span id="mecanicos-counter" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200/60">Cargando…</span>
+            </div>
+            <p class="mt-1 text-sm text-slate-500">Mecánicos de planta y las inspecciones livianas que tienen asignadas.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button id="btn-nuevo-mecanico" type="button" disabled title="Próximamente"
+              class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-teal-600 shadow-sm opacity-50 cursor-not-allowed shrink-0">
+              + Nuevo Mecánico
+            </button>
+          </div>
+        </div>
+      </section>
+      <section id="mecanicos-grid-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" data-purpose="mecanicos-grid"></section>
     </div>
   </main>
 </div>
@@ -994,9 +1016,116 @@ function marcarPestanaVehiculosActiva() {
   pestana.classList.add("text-teal-600");
   pestana.classList.remove("text-slate-500");
   $("nav-vehicles-indicator").classList.remove("hidden");
-  const choferes = $("nav-drivers");
-  choferes.classList.add("text-slate-500");
-  choferes.classList.remove("text-teal-600");
+  const mecanicos = $("nav-drivers");
+  mecanicos.classList.add("text-slate-500");
+  mecanicos.classList.remove("text-teal-600");
+}
+
+/* ----------------------------- Sección Mecánicos ----------------------------- */
+const URL_MECANICOS = "/api/mecanicos";
+const URL_FOTOS_EMPLEADOS = "https://pub-2cfd7537f6a24512a06e125f7dc77a43.r2.dev/empleados/";
+const PUESTO_MECANICO = "MECÁNICO DE PLANTA";
+const mecanicosEstado = { lista: [], cargando: false, cargado: false, error: null };
+
+/* Texto del badge de inspecciones según el conteo */
+function textoInspeccionesAsignadas(conteo) {
+  if (conteo === 0) return "Sin inspección liviana";
+  if (conteo === 1) return "Tiene asignada 1 inspección liviana";
+  return "Tiene asignadas " + conteo + " inspecciones livianas";
+}
+
+async function cargarMecanicos(forzar = false) {
+  if (mecanicosEstado.cargando || (mecanicosEstado.cargado && !forzar)) return;
+  mecanicosEstado.cargando = true;
+  mecanicosEstado.error = null;
+  renderMecanicos();
+  try {
+    const respuesta = await fetch(URL_MECANICOS, { cache: "no-store" });
+    if (!respuesta.ok) throw new Error("HTTP " + respuesta.status);
+    const datos = await respuesta.json();
+    mecanicosEstado.lista = Array.isArray(datos.mecanicos) ? datos.mecanicos : [];
+    mecanicosEstado.cargado = true;
+  } catch (error) {
+    mecanicosEstado.error = String(error && error.message ? error.message : error);
+  }
+  mecanicosEstado.cargando = false;
+  renderMecanicos();
+}
+
+function crearTarjetaMecanico(mecanico) {
+  const tarjeta = document.createElement("article");
+  tarjeta.className = "bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col";
+
+  /* Foto desde R2 (empleados/<foto_mecanico>) con reserva de icono si falla */
+  const marco = document.createElement("div");
+  marco.className = "relative w-full aspect-[4/3] overflow-hidden bg-slate-100";
+  const reservaFoto = () => {
+    marco.innerHTML = "";
+    marco.className = "relative w-full aspect-[4/3] overflow-hidden bg-teal-50 flex items-center justify-center text-teal-600";
+    marco.append(crearSvgIcono(RUTA_ICONO_CAMION, "w-14 h-14", "1.4"));
+  };
+  if (mecanico.foto_mecanico) {
+    const img = document.createElement("img");
+    img.src = URL_FOTOS_EMPLEADOS + encodeURIComponent(mecanico.foto_mecanico);
+    img.alt = "Foto de " + mecanico.nombre_mecanico;
+    img.loading = "lazy";
+    img.className = "w-full h-full object-cover";
+    img.addEventListener("error", reservaFoto);
+    marco.append(img);
+  } else {
+    reservaFoto();
+  }
+
+  const cuerpo = document.createElement("div");
+  cuerpo.className = "p-4 flex flex-col gap-2 flex-1";
+
+  const puesto = document.createElement("span");
+  puesto.className = "text-[11px] uppercase tracking-wider font-semibold text-slate-400";
+  puesto.textContent = PUESTO_MECANICO;
+
+  const nombre = document.createElement("h3");
+  nombre.className = "text-base font-semibold text-slate-900 leading-snug";
+  nombre.textContent = mecanico.nombre_mecanico;
+
+  const conteo = Number(mecanico.inspecciones_asignadas) || 0;
+  const badgeInspecciones = document.createElement("span");
+  badgeInspecciones.dataset.conteo = String(conteo);
+  badgeInspecciones.className = "inline-flex items-center gap-1.5 self-start text-xs font-medium px-2.5 py-1 rounded-full border " +
+    (conteo > 0 ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-600 border-slate-200");
+  badgeInspecciones.textContent = textoInspeccionesAsignadas(conteo);
+
+  const pie = document.createElement("div");
+  pie.className = "mt-auto pt-3 border-t border-slate-100 flex items-center justify-between";
+  const etiqueta = document.createElement("span");
+  etiqueta.className = "text-[10px] uppercase tracking-wider font-semibold text-slate-400";
+  etiqueta.textContent = "Identidad";
+  const badgeIdentidad = document.createElement("span");
+  badgeIdentidad.className = "bg-slate-100 text-slate-700 font-mono text-xs px-2 py-0.5 rounded border border-slate-200 font-medium";
+  badgeIdentidad.textContent = mecanico.identidad;
+  pie.append(etiqueta, badgeIdentidad);
+
+  cuerpo.append(puesto, nombre, badgeInspecciones, pie);
+  tarjeta.append(marco, cuerpo);
+  return tarjeta;
+}
+
+function renderMecanicos() {
+  const contador = $("mecanicos-counter");
+  const contenedor = $("mecanicos-grid-container");
+  contenedor.innerHTML = "";
+
+  if (mecanicosEstado.cargando) {
+    contador.textContent = "Cargando…";
+    contenedor.append(mensajeListado("Cargando mecánicos desde la API (Cloudflare D1)…", "bg-white rounded-xl border border-slate-200/80 p-10 text-center col-span-full"));
+    return;
+  }
+  if (mecanicosEstado.error) {
+    contador.textContent = "Sin datos";
+    contenedor.append(mensajeErrorCarga(mecanicosEstado.error));
+    return;
+  }
+  contador.textContent = mecanicosEstado.lista.length + " Mecánicos Registrados";
+  mecanicosEstado.lista.forEach((mecanico) => contenedor.append(crearTarjetaMecanico(mecanico)));
 }
 
 /* --------------------- Carga de datos (API en Cloudflare D1) ------------- */
@@ -1745,8 +1874,44 @@ function volverAlListado() {
   estado.vista = "app";
 }
 
+/* Muestra la sección Mecánicos y oculta las vistas de vehículos */
+function mostrarSeccionMecanicos() {
+  $("view-vehicle-detail").classList.add("hidden");
+  $("view-list").classList.add("hidden");
+  $("view-grid").classList.add("hidden");
+  $("view-mecanicos").classList.remove("hidden");
+  $("nav-drivers").classList.add("text-teal-600");
+  $("nav-drivers").classList.remove("text-slate-500");
+  $("nav-vehicles-indicator").classList.add("hidden");
+  $("nav-vehicles").classList.remove("text-teal-600");
+  $("nav-vehicles").classList.add("text-slate-500");
+  estado.vista = "mecanicos";
+  cargarMecanicos();
+}
+
+/* Regresa a la sección de vehículos (listado o cuadrícula según la vista previa) */
+function mostrarSeccionVehiculos() {
+  $("view-mecanicos").classList.add("hidden");
+  $("nav-drivers").classList.remove("text-teal-600");
+  $("nav-drivers").classList.add("text-slate-500");
+  marcarPestanaVehiculosActiva();
+  $("view-app").classList.remove("hidden");
+  aplicarLayoutVistas();
+  estado.vista = "app";
+}
+
 /* ----------------------------- Inicialización ---------------------------- */
 pinInput.addEventListener("input", updateDots);
+$("nav-drivers").addEventListener("click", (evento) => {
+  evento.preventDefault();
+  mostrarSeccionMecanicos();
+});
+$("nav-vehicles").querySelector("button").addEventListener("click", (evento) => {
+  if (estado.vista === "mecanicos") {
+    evento.preventDefault();
+    mostrarSeccionVehiculos();
+  }
+});
 $("search-input").addEventListener("input", render);
 $("btn-perfil-usuario").addEventListener("click", (evento) => {
   evento.stopPropagation();
