@@ -11,6 +11,35 @@ export async function onRequestOptions() {
   return respuestaOpciones();
 }
 
+/* GET /api/inspecciones -> todas las solicitudes, con el nombre del mecánico asignado.
+   El mecánico se resuelve por id (texto) o por identidad, igual que el conteo de /api/mecanicos.
+   Si id_mecanico es 'sin definir' (o no existe el mecánico) mecanico_nombre queda en null. */
+export async function onRequestGet({ env }) {
+  try {
+    const { results } = await env.mantenimiento_db
+      .prepare(
+        "SELECT i.id, i.vehiculo_id, i.codigo_hoja, i.ubicacion, i.secuencia, i.usuario_solicitante, " +
+        "i.fecha_solicitud, i.administrador, i.id_mecanico, i.estado_hoja, i.porcentaje, " +
+        "v.nombre AS vehiculo_nombre, v.placa AS vehiculo_placa, " +
+        "m.nombre_mecanico AS mecanico_nombre, m.foto_mecanico AS mecanico_foto " +
+        "FROM inspecciones i " +
+        "LEFT JOIN vehiculos v ON v.id = i.vehiculo_id " +
+        "LEFT JOIN mecanicos m ON i.id_mecanico <> 'sin definir' " +
+        "AND (i.id_mecanico = CAST(m.id AS TEXT) OR i.id_mecanico = m.identidad) " +
+        "ORDER BY i.fecha_solicitud DESC, i.id DESC"
+      )
+      .all();
+    const solicitudes = results.map((fila) => ({
+      ...fila,
+      mecanico_nombre: fila.id_mecanico === "sin definir" ? null : (fila.mecanico_nombre || null)
+    }));
+    const pendientes = solicitudes.filter((s) => s.estado_hoja === "solicitada").length;
+    return respuestaJson({ total: solicitudes.length, pendientes: pendientes, inspecciones: solicitudes });
+  } catch (error) {
+    return respuestaError("Error al leer inspecciones: " + error.message, 500);
+  }
+}
+
 export async function onRequestPost({ request, env }) {
   let cuerpo;
   try {

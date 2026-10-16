@@ -148,6 +148,16 @@
           <span>Mecánicos</span>
         </div>
       </a>
+      <!-- Pestaña 3: Solicitudes de Inspección (con badge de pendientes) -->
+      <a id="nav-solicitudes" class="relative py-4 px-2 flex flex-col items-center group text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors" href="#solicitudes">
+        <div class="flex items-center space-x-2 mb-1">
+          <svg class="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+          </svg>
+          <span>Solicitudes de Inspección</span>
+          <span id="badge-solicitudes" class="hidden inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-600 border border-rose-200">0</span>
+        </div>
+      </a>
     </div>
   </nav>
 </header>
@@ -297,6 +307,36 @@
       <section id="vehicles-grid-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" data-purpose="vehicles-grid"></section>
     </div>
 
+    <!-- Área de contenido: SOLICITUDES DE INSPECCIÓN LIVIANA (pestaña "Solicitudes de Inspección") -->
+    <div id="view-solicitudes" class="hidden">
+      <section class="mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-3">
+              <h1 class="text-2xl font-bold tracking-tight text-slate-800">Solicitudes de Inspección Liviana</h1>
+              <span id="solicitudes-counter" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200/60">Cargando…</span>
+            </div>
+            <p class="mt-1 text-sm text-slate-500">Gestión y asignación de órdenes de trabajo recibidas para la flota liviana.</p>
+          </div>
+        </div>
+      </section>
+      <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left font-semibold">Código / Nomenclatura</th>
+              <th scope="col" class="px-4 py-3 text-left font-semibold">Solicitante &amp; Fecha</th>
+              <th scope="col" class="px-4 py-3 text-left font-semibold">Estado</th>
+              <th scope="col" class="px-4 py-3 text-left font-semibold">Avance</th>
+              <th scope="col" class="px-4 py-3 text-left font-semibold">Mecánico asignado</th>
+              <th scope="col" class="px-4 py-3 text-left font-semibold">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="solicitudes-tbody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Área de contenido: SECCIÓN MECÁNICOS (pestaña "Mecánicos") -->
     <div id="view-mecanicos" class="hidden">
       <section class="mb-8">
@@ -356,6 +396,22 @@
     <div class="mt-6 flex items-center justify-end gap-2">
       <button id="btn-cancelar-tiempo" type="button" class="px-4 py-2 text-sm font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">Cancelar</button>
       <button id="btn-aceptar-tiempo" type="button" class="px-4 py-2 text-sm font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 shadow-sm transition-colors disabled:opacity-60">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL 3: Confirmación de asignación de inspección
+     ============================================================ -->
+<div id="modal-asignada" class="hidden fixed inset-0 z-[70] items-center justify-center bg-slate-900/50 p-4">
+  <div role="dialog" aria-modal="true" aria-labelledby="modal-asignada-titulo" class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-6 text-center">
+    <div class="mx-auto w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg>
+    </div>
+    <h2 id="modal-asignada-titulo" class="mt-4 text-lg font-semibold text-slate-800">Inspección Asignada</h2>
+    <p id="modal-asignada-mensaje" class="mt-2 text-sm text-slate-600"></p>
+    <div class="mt-6 flex justify-center">
+      <button id="btn-cerrar-asignada" type="button" class="px-4 py-2 text-sm font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 shadow-sm transition-colors">Entendido / Aceptar</button>
     </div>
   </div>
 </div>
@@ -1874,6 +1930,283 @@ function volverAlListado() {
   estado.vista = "app";
 }
 
+/* ----------------------- Solicitudes de Inspección (asignación) ----------------------- */
+const URL_INSPECCIONES_LISTA = "/api/inspecciones";
+const URL_ASIGNAR_INSPECCION = "/api/inspecciones/asignar";
+const solicitudesEstado = { lista: [], cargando: false, error: null, mecanicos: [] };
+const ESTADO_HOJA_ETIQUETA = {
+  solicitada: { texto: "solicitada", clases: "bg-amber-50 text-amber-700 border-amber-200", punto: "bg-amber-500" },
+  asignada: { texto: "asignada", clases: "bg-blue-50 text-blue-700 border-blue-200", punto: "bg-blue-500" },
+  "en inspeccion": { texto: "en inspección", clases: "bg-blue-50 text-blue-700 border-blue-200", punto: "bg-blue-500" }
+};
+
+/* "2026-10-16 14:30:00" (UTC de D1) -> "16 Oct 2026 • 02:30 PM" */
+function formatearFechaSolicitud(valor) {
+  if (!valor) return "—";
+  const texto = String(valor).trim();
+  const iso = texto.replace(" ", "T") + (/[zZ]|[+-]\d{2}:?\d{2}$/.test(texto) ? "" : "Z");
+  const fecha = new Date(iso);
+  if (Number.isNaN(fecha.getTime())) return texto;
+  const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+  const horas = fecha.getHours();
+  const h12 = horas % 12 === 0 ? 12 : horas % 12;
+  const mm = String(fecha.getMinutes()).padStart(2, "0");
+  const dd = String(fecha.getDate()).padStart(2, "0");
+  return dd + " " + meses[fecha.getMonth()] + " " + fecha.getFullYear() + " • " +
+    String(h12).padStart(2, "0") + ":" + mm + " " + (horas < 12 ? "AM" : "PM");
+}
+
+/* Badge del header: número de solicitudes con estado_hoja = 'solicitada' */
+function actualizarBadgeSolicitudes(pendientes) {
+  const badge = $("badge-solicitudes");
+  badge.textContent = String(pendientes);
+  badge.classList.toggle("hidden", pendientes === 0);
+}
+
+async function cargarSolicitudes() {
+  if (solicitudesEstado.cargando) return;
+  solicitudesEstado.cargando = true;
+  solicitudesEstado.error = null;
+  renderSolicitudes();
+  try {
+    const [respInsp, respMec] = await Promise.all([
+      fetch(URL_INSPECCIONES_LISTA, { cache: "no-store" }),
+      fetch(URL_MECANICOS, { cache: "no-store" })
+    ]);
+    if (!respInsp.ok) throw new Error("inspecciones: HTTP " + respInsp.status);
+    if (!respMec.ok) throw new Error("mecánicos: HTTP " + respMec.status);
+    const datos = await respInsp.json();
+    const mecanicos = await respMec.json();
+    solicitudesEstado.lista = Array.isArray(datos.inspecciones) ? datos.inspecciones : [];
+    solicitudesEstado.mecanicos = Array.isArray(mecanicos.mecanicos) ? mecanicos.mecanicos : [];
+    actualizarBadgeSolicitudes(solicitudesEstado.lista.filter((s) => s.estado_hoja === "solicitada").length);
+  } catch (error) {
+    solicitudesEstado.error = String(error && error.message ? error.message : error);
+  }
+  solicitudesEstado.cargando = false;
+  renderSolicitudes();
+}
+
+/* Muestra la sección de solicitudes y oculta las demás vistas */
+function mostrarSeccionSolicitudes() {
+  $("view-app").classList.remove("hidden");
+  $("view-vehicle-detail").classList.add("hidden");
+  $("view-list").classList.add("hidden");
+  $("view-grid").classList.add("hidden");
+  $("view-mecanicos").classList.add("hidden");
+  $("view-solicitudes").classList.remove("hidden");
+  $("nav-solicitudes").classList.add("text-teal-600");
+  $("nav-solicitudes").classList.remove("text-slate-500");
+  $("nav-drivers").classList.remove("text-teal-600");
+  $("nav-drivers").classList.add("text-slate-500");
+  $("nav-vehicles-indicator").classList.add("hidden");
+  $("nav-vehicles").classList.remove("text-teal-600");
+  $("nav-vehicles").classList.add("text-slate-500");
+  estado.vista = "solicitudes";
+  cargarSolicitudes();
+}
+
+function crearCeldaMecanico(solicitud) {
+  const celda = document.createElement("td");
+  celda.className = "px-4 py-3";
+  if (solicitud.id_mecanico === "sin definir" || !solicitud.mecanico_nombre) {
+    const sinAsignar = document.createElement("span");
+    sinAsignar.className = "inline-flex items-center gap-1.5 text-xs text-slate-400 italic";
+    sinAsignar.textContent = "Mecánico sin asignar";
+    celda.append(sinAsignar);
+  } else {
+    const asignado = document.createElement("span");
+    asignado.className = "inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full";
+    asignado.textContent = solicitud.mecanico_nombre;
+    celda.append(asignado);
+  }
+  return celda;
+}
+
+/* Código de hoja y unidad */
+function crearCeldaCodigo(solicitud) {
+  const celda = document.createElement("td");
+  celda.className = "px-4 py-3";
+  const codigo = document.createElement("span");
+  codigo.className = "inline-block font-mono text-xs font-semibold text-slate-800 bg-slate-100 border border-slate-200 px-2 py-1 rounded";
+  codigo.textContent = solicitud.codigo_hoja;
+  const unidad = document.createElement("div");
+  unidad.className = "mt-1 text-[11px] text-slate-500";
+  unidad.textContent = "Unidad #" + solicitud.vehiculo_id + " • " + (solicitud.vehiculo_nombre || "Vehículo");
+  celda.append(codigo, unidad);
+  return celda;
+}
+
+/* Solicitante y fecha formateada */
+function crearCeldaSolicitante(solicitud) {
+  const celda = document.createElement("td");
+  celda.className = "px-4 py-3";
+  const nombre = document.createElement("div");
+  nombre.className = "font-medium text-slate-800";
+  nombre.textContent = solicitud.usuario_solicitante;
+  const fecha = document.createElement("div");
+  fecha.className = "text-xs text-slate-500 font-mono";
+  fecha.textContent = formatearFechaSolicitud(solicitud.fecha_solicitud);
+  celda.append(nombre, fecha);
+  return celda;
+}
+
+/* Badge de estado_hoja */
+function crearCeldaEstado(solicitud) {
+  const celda = document.createElement("td");
+  celda.className = "px-4 py-3";
+  const etiqueta = ESTADO_HOJA_ETIQUETA[solicitud.estado_hoja] ||
+    { texto: solicitud.estado_hoja, clases: "bg-slate-100 text-slate-600 border-slate-200", punto: "bg-slate-400" };
+  const badge = document.createElement("span");
+  badge.className = "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border " + etiqueta.clases;
+  const punto = document.createElement("span");
+  punto.className = "w-1.5 h-1.5 rounded-full " + etiqueta.punto;
+  badge.append(punto, document.createTextNode(etiqueta.texto));
+  celda.append(badge);
+  return celda;
+}
+
+/* Porcentaje: NULL o 0 muestra "Aún sin iniciar" */
+function crearCeldaAvance(solicitud) {
+  const celda = document.createElement("td");
+  celda.className = "px-4 py-3 text-xs text-slate-500";
+  const porcentaje = String(solicitud.porcentaje || "").trim();
+  celda.textContent = porcentaje && porcentaje !== "0" && porcentaje !== "0%"
+    ? porcentaje
+    : "0% • Aún sin iniciar";
+  return celda;
+}
+
+/* Control de selección (mecánicos desde la API) y botón Asignar */
+function crearCeldaAccion(solicitud) {
+  const celda = document.createElement("td");
+  celda.className = "px-4 py-3";
+  const accion = document.createElement("div");
+  accion.className = "flex items-center gap-2";
+  const selector = document.createElement("select");
+  selector.className = "text-xs rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500";
+  selector.setAttribute("aria-label", "Seleccionar mecánico para " + solicitud.codigo_hoja);
+  const opcionVacia = document.createElement("option");
+  opcionVacia.value = "";
+  opcionVacia.textContent = "Seleccionar mecánico…";
+  selector.append(opcionVacia);
+  solicitudesEstado.mecanicos.forEach((m) => {
+    const opcion = document.createElement("option");
+    opcion.value = String(m.id);
+    opcion.textContent = m.nombre_mecanico;
+    if (solicitud.id_mecanico !== "sin definir" && String(m.id) === String(solicitud.id_mecanico)) opcion.selected = true;
+    selector.append(opcion);
+  });
+  const boton = document.createElement("button");
+  boton.type = "button";
+  boton.className = "px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 shadow-sm transition-colors disabled:opacity-50";
+  boton.textContent = "Asignar";
+  boton.addEventListener("click", () => asignarInspeccion(solicitud, selector, boton));
+  accion.append(selector, boton);
+  celda.append(accion);
+  return celda;
+}
+
+function crearFilaSolicitud(solicitud) {
+  const fila = document.createElement("tr");
+  fila.className = "hover:bg-slate-50/60";
+  fila.dataset.inspeccionId = String(solicitud.id);
+  fila.append(
+    crearCeldaCodigo(solicitud),
+    crearCeldaSolicitante(solicitud),
+    crearCeldaEstado(solicitud),
+    crearCeldaAvance(solicitud),
+    crearCeldaMecanico(solicitud),
+    crearCeldaAccion(solicitud)
+  );
+  return fila;
+}
+
+function filaMensaje(texto, clases) {
+  const fila = document.createElement("tr");
+  const celda = document.createElement("td");
+  celda.colSpan = 6;
+  celda.className = "px-4 py-10 text-center text-sm " + clases;
+  celda.textContent = texto;
+  fila.append(celda);
+  return fila;
+}
+
+function renderSolicitudes() {
+  const contador = $("solicitudes-counter");
+  const tbody = $("solicitudes-tbody");
+  tbody.innerHTML = "";
+  if (solicitudesEstado.cargando) {
+    contador.textContent = "Cargando…";
+    tbody.append(filaMensaje("Cargando solicitudes desde Cloudflare D1…", "text-slate-500 animate-pulse"));
+    return;
+  }
+  if (solicitudesEstado.error) {
+    contador.textContent = "Sin datos";
+    tbody.append(filaMensaje("No se pudieron cargar las solicitudes: " + solicitudesEstado.error, "text-amber-700"));
+    return;
+  }
+  const pendientes = solicitudesEstado.lista.filter((s) => s.estado_hoja === "solicitada").length;
+  contador.textContent = pendientes + " pendientes de " + solicitudesEstado.lista.length;
+  if (solicitudesEstado.lista.length === 0) {
+    tbody.append(filaMensaje("No hay solicitudes de inspección registradas.", "text-slate-500"));
+    return;
+  }
+  solicitudesEstado.lista.forEach((s) => tbody.append(crearFilaSolicitud(s)));
+}
+
+/* Asigna el mecánico elegido vía POST /api/inspecciones/asignar.
+   El administrador lo envía el cliente, pero el servidor lo valida contra la lista de administradores. */
+async function asignarInspeccion(solicitud, selector, boton) {
+  const idMecanico = selector.value;
+  if (!idMecanico) {
+    mostrarToast("Selecciona un mecánico antes de asignar.", "alerta");
+    return;
+  }
+  if (!esAdmin()) {
+    mostrarToast(MSG_PERMISO_DENEGADO, "error");
+    return;
+  }
+  boton.disabled = true;
+  try {
+    const respuesta = await fetch(URL_ASIGNAR_INSPECCION, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        inspeccion_id: solicitud.id,
+        id_mecanico: idMecanico,
+        administrador: estado.usuario.nombre
+      }),
+      cache: "no-store"
+    });
+    const datos = await respuesta.json().catch(() => null);
+    if (!respuesta.ok) throw new Error((datos && datos.error) || ("HTTP " + respuesta.status));
+
+    const nombreMecanico = datos.mecanico_nombre || selector.options[selector.selectedIndex].textContent;
+    const mensaje = $("modal-asignada-mensaje");
+    mensaje.textContent = "";
+    mensaje.append(
+      document.createTextNode("La inspección "),
+      Object.assign(document.createElement("strong"), { className: "font-mono text-slate-800", textContent: solicitud.codigo_hoja }),
+      document.createTextNode(" ha sido asignada exitosamente al mecánico "),
+      Object.assign(document.createElement("strong"), { className: "text-slate-800", textContent: nombreMecanico }),
+      document.createTextNode(".")
+    );
+    $("modal-asignada").classList.remove("hidden");
+    $("modal-asignada").classList.add("flex");
+  } catch (error) {
+    mostrarToast("No se pudo asignar la inspección: " + error.message, "error");
+  } finally {
+    boton.disabled = false;
+  }
+}
+
+/* Al cerrar el modal: recarga el listado y el badge del header */
+function cerrarModalAsignada() {
+  cerrarModal("modal-asignada");
+  cargarSolicitudes();
+}
+
 /* Muestra la sección Mecánicos y oculta las vistas de vehículos */
 function mostrarSeccionMecanicos() {
   $("view-vehicle-detail").classList.add("hidden");
@@ -1906,6 +2239,11 @@ $("nav-drivers").addEventListener("click", (evento) => {
   evento.preventDefault();
   mostrarSeccionMecanicos();
 });
+$("nav-solicitudes").addEventListener("click", (evento) => {
+  evento.preventDefault();
+  mostrarSeccionSolicitudes();
+});
+$("btn-cerrar-asignada").addEventListener("click", cerrarModalAsignada);
 $("nav-vehicles").querySelector("button").addEventListener("click", (evento) => {
   if (estado.vista === "mecanicos") {
     evento.preventDefault();
